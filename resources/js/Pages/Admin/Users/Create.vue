@@ -13,6 +13,7 @@ defineProps({
 
 const form = useForm({
     name: '',
+    last_name: '',
     email: '',
     password: '',
     password_confirmation: '',
@@ -54,6 +55,12 @@ const submit = () => {
                             <Label for="name">Nombre <span class="text-red-500">*</span></Label>
                             <Input id="name" v-model="form.name" type="text" required />
                             <p class="text-sm text-red-500" v-if="form.errors.name">{{ form.errors.name }}</p>
+                        </div>
+
+                        <div class="space-y-2">
+                            <Label for="last_name">Apellidos</Label>
+                            <Input id="last_name" v-model="form.last_name" type="text" />
+                            <p class="text-sm text-red-500" v-if="form.errors.last_name">{{ form.errors.last_name }}</p>
                         </div>
 
                         <div class="space-y-2">

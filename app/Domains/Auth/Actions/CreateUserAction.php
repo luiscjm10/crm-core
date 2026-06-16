@@ -12,6 +12,7 @@ class CreateUserAction
     {
         $user = User::create([
             'name' => $data['name'],
+            'last_name' => $data['last_name'] ?? null,
             'email' => $data['email'],
             'password' => Hash::make($data['password']),
             'company_id' => $data['company_id'] ?? null,

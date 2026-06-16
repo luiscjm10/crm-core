@@ -12,6 +12,7 @@ class UpdateUserAction
     {
         $fillable = [
             'name' => $data['name'],
+            'last_name' => $data['last_name'] ?? $user->last_name,
             'email' => $data['email'],
             'company_id' => $data['company_id'] ?? $user->company_id,
         ];

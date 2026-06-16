@@ -42,7 +42,7 @@ defineProps({
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
                     <div class="space-y-1">
                         <p class="text-sm font-medium text-gray-500 dark:text-zinc-500">Nombre</p>
-                        <p class="text-base text-gray-900 dark:text-zinc-100 font-medium">{{ user.name }}</p>
+                        <p class="text-base text-gray-900 dark:text-zinc-100 font-medium">{{ user.name }} {{ user.last_name }}</p>
                     </div>
                     <div class="space-y-1">
                         <p class="text-sm font-medium text-gray-500 dark:text-zinc-500">Email</p>

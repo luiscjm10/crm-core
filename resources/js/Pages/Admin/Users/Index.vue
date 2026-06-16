@@ -80,6 +80,7 @@ const deleteUser = (id, name) => {
                         <TableRow>
                             <TableHead class="w-16">ID</TableHead>
                             <TableHead>Nombre</TableHead>
+                            <TableHead>Apellidos</TableHead>
                             <TableHead>Email</TableHead>
                             <TableHead>Rol</TableHead>
                             <TableHead>Compañía</TableHead>
@@ -88,13 +89,14 @@ const deleteUser = (id, name) => {
                     </TableHeader>
                     <TableBody>
                         <TableRow v-if="users.data.length === 0">
-                            <TableCell colspan="6" class="text-center text-muted-foreground h-24">
+                            <TableCell colspan="7" class="text-center text-muted-foreground h-24">
                                 No hay usuarios registrados aún.
                             </TableCell>
                         </TableRow>
                         <TableRow v-for="user in users.data" :key="user.id" v-else>
                             <TableCell class="text-muted-foreground text-sm">{{ user.id }}</TableCell>
                             <TableCell class="font-medium text-foreground">{{ user.name }}</TableCell>
+                            <TableCell class="text-muted-foreground">{{ user.last_name || '—' }}</TableCell>
                             <TableCell class="text-muted-foreground">{{ user.email }}</TableCell>
                             <TableCell>
                                 <span v-for="role in user.roles" :key="role.id"
