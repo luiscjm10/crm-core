@@ -32,6 +32,18 @@ class RoleAndAdminSeeder extends Seeder
             ['name' => 'tasks.update',     'description' => 'Editar tareas existentes',              'group' => 4],
             ['name' => 'tasks.delete',     'description' => 'Eliminar tareas del sistema',           'group' => 4],
             ['name' => 'tasks.complete',   'description' => 'Marcar tareas como completadas',        'group' => 4],
+            ['name' => 'tickets.create',   'description' => 'Crear nuevas solicitudes',              'group' => 5],
+            ['name' => 'tickets.read',     'description' => 'Ver listado y detalle de solicitudes',   'group' => 5],
+            ['name' => 'tickets.update',   'description' => 'Editar solicitudes existentes',          'group' => 5],
+            ['name' => 'tickets.delete',   'description' => 'Eliminar solicitudes del sistema',       'group' => 5],
+            ['name' => 'tickets.view-all', 'description' => 'Ver solicitudes de compañías asignadas',   'group' => 5],
+            ['name' => 'ticket-types.create', 'description' => 'Crear tipos de solicitud',             'group' => 5],
+            ['name' => 'ticket-types.read',   'description' => 'Ver listado de tipos de solicitud',    'group' => 5],
+            ['name' => 'ticket-types.update', 'description' => 'Editar tipos de solicitud',            'group' => 5],
+            ['name' => 'ticket-types.delete', 'description' => 'Eliminar tipos de solicitud',          'group' => 5],
+            ['name' => 'tickets.assign-requester', 'description' => 'Seleccionar solicitante al crear ticket', 'group' => 5],
+            ['name' => 'tickets.close', 'description' => 'Cerrar tickets del sistema', 'group' => 5],
+            ['name' => 'tickets.comment', 'description' => 'Comentar en tickets del sistema', 'group' => 5],
         ];
 
         $permissionNames = [];

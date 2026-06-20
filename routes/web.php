@@ -25,15 +25,36 @@ Route::middleware('auth')->group(function () {
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 
     Route::resource('companies', CompanyController::class);
+    Route::get('api/companies/{company}/ticket-types', \App\Http\Controllers\Api\CompanyTicketTypeController::class)
+        ->name('api.companies.ticket-types');
+    Route::get('api/companies/{company}/users', function (\App\Domains\Clients\Company $company) {
+        return response()->json(
+            $company->users()->select('id', 'name', 'last_name')->get()
+        );
+    })->name('api.companies.users');
 
-    Route::middleware('role:super-admin')->prefix('admin')->name('admin.')->group(function () {
+    Route::prefix('admin')->name('admin.')->group(function () {
         Route::resource('users', \App\Http\Controllers\Admin\UserController::class);
-        Route::resource('roles', \App\Http\Controllers\Admin\RoleController::class);
+        Route::resource('roles', \App\Http\Controllers\Admin\RoleController::class)->except('show');
         Route::get('permissions', [\App\Http\Controllers\Admin\PermissionController::class, 'index'])->name('permissions.index');
         Route::get('tasks', [\App\Http\Controllers\Admin\TaskController::class, 'index'])->name('tasks.index');
+        Route::post('comments', [\App\Http\Controllers\CommentController::class, 'store'])->name('comments.store');
+        Route::get('ticket-types', [\App\Http\Controllers\Admin\TicketTypeController::class, 'index'])->name('ticket-types.index');
+        Route::post('ticket-types', [\App\Http\Controllers\Admin\TicketTypeController::class, 'store'])->name('ticket-types.store');
+        Route::put('ticket-types/{ticketType}', [\App\Http\Controllers\Admin\TicketTypeController::class, 'update'])->name('ticket-types.update');
+        Route::delete('ticket-types/{ticketType}', [\App\Http\Controllers\Admin\TicketTypeController::class, 'destroy'])->name('ticket-types.destroy');
     });
 
-    Route::middleware('role:super-admin')->prefix('admin/companies/{company}')->name('admin.companies.tasks.')->scopeBindings()->group(function () {
+    Route::prefix('admin')->name('admin.tickets.')->group(function () {
+        Route::get('tickets', [\App\Http\Controllers\Admin\TicketController::class, 'index'])->name('index');
+        Route::get('tickets/create', [\App\Http\Controllers\Admin\TicketController::class, 'create'])->name('create');
+        Route::post('tickets', [\App\Http\Controllers\Admin\TicketController::class, 'store'])->name('store');
+        Route::get('tickets/{ticket}', [\App\Http\Controllers\Admin\TicketController::class, 'show'])->name('show');
+        Route::patch('tickets/{ticket}/close', [\App\Http\Controllers\Admin\TicketController::class, 'close'])->name('close');
+        Route::delete('tickets/{ticket}', [\App\Http\Controllers\Admin\TicketController::class, 'destroy'])->name('destroy');
+    });
+
+    Route::prefix('admin/companies/{company}')->name('admin.companies.tasks.')->scopeBindings()->group(function () {
         Route::get('tasks', [\App\Http\Controllers\Admin\TaskController::class, 'index'])->name('index');
         Route::get('tasks/create', [\App\Http\Controllers\Admin\TaskController::class, 'create'])->name('create');
         Route::post('tasks', [\App\Http\Controllers\Admin\TaskController::class, 'store'])->name('store');
