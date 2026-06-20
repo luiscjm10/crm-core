@@ -1,8 +1,8 @@
 <script setup>
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
-import { Head, Link, router } from '@inertiajs/vue3';
+import { Head, Link, router, usePage } from '@inertiajs/vue3';
 import Swal from 'sweetalert2';
-import { ref } from 'vue';
+import { ref, computed } from 'vue';
 import { useDark } from '@vueuse/core';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -19,6 +19,11 @@ const changePerPage = () => {
 };
 
 const isDark = useDark();
+
+const permissions = computed(() => usePage().props.auth.permissions ?? []);
+const canCreate = computed(() => permissions.value.includes('users.create'));
+const canUpdate = computed(() => permissions.value.includes('users.update'));
+const canDelete = computed(() => permissions.value.includes('users.delete'));
 
 const deleteUser = (id, name) => {
     Swal.fire({
@@ -62,7 +67,7 @@ const deleteUser = (id, name) => {
         <template #header>
             <div class="flex justify-between items-center">
                 <span>Usuarios</span>
-                <Button variant="outline" as-child
+                <Button v-if="canCreate" variant="outline" as-child
                     class="h-9 px-4 border-emerald-600 text-emerald-600 hover:bg-emerald-600 hover:text-white dark:border-emerald-500 dark:text-emerald-400 dark:hover:bg-emerald-500 dark:hover:text-zinc-950 transition-colors">
                     <Link :href="route('admin.users.create')">+ Nuevo Usuario</Link>
                 </Button>
@@ -84,12 +89,13 @@ const deleteUser = (id, name) => {
                             <TableHead>Email</TableHead>
                             <TableHead>Rol</TableHead>
                             <TableHead>Compañía</TableHead>
+                            <TableHead>Compañías asignadas</TableHead>
                             <TableHead class="text-right">Acciones</TableHead>
                         </TableRow>
                     </TableHeader>
                     <TableBody>
                         <TableRow v-if="users.data.length === 0">
-                            <TableCell colspan="7" class="text-center text-muted-foreground h-24">
+                            <TableCell colspan="8" class="text-center text-muted-foreground h-24">
                                 No hay usuarios registrados aún.
                             </TableCell>
                         </TableRow>
@@ -106,16 +112,24 @@ const deleteUser = (id, name) => {
                                 <span v-if="!user.roles.length" class="text-muted-foreground text-sm">—</span>
                             </TableCell>
                             <TableCell class="text-muted-foreground">{{ user.company?.name || '—' }}</TableCell>
+                            <TableCell class="text-muted-foreground max-w-xs">
+                                <template v-if="user.companies?.length">
+                                    <span v-for="(c, i) in user.companies" :key="c.id">
+                                        {{ c.name }}<template v-if="i < user.companies.length - 1">, </template>
+                                    </span>
+                                </template>
+                                <span v-else class="text-zinc-400 dark:text-zinc-600">—</span>
+                            </TableCell>
                             <TableCell class="text-right space-x-3">
                                 <Link :href="route('admin.users.show', user.id)"
                                     class="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 font-medium transition-colors text-sm">
                                     Ver
                                 </Link>
-                                <Link :href="route('admin.users.edit', user.id)"
+                                <Link v-if="canUpdate" :href="route('admin.users.edit', user.id)"
                                     class="text-primary hover:text-primary/80 font-medium transition-colors text-sm">
                                     Editar
                                 </Link>
-                                <button @click="deleteUser(user.id, user.name)"
+                                <button v-if="canDelete" @click="deleteUser(user.id, user.name)"
                                     class="text-destructive hover:text-destructive/80 font-medium transition-colors text-sm">
                                     Eliminar
                                 </button>

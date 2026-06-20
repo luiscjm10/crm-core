@@ -1,8 +1,8 @@
 <script setup>
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
-import { Head, Link, router } from '@inertiajs/vue3';
+import { Head, Link, router, usePage } from '@inertiajs/vue3';
 import Swal from 'sweetalert2';
-import { ref } from 'vue';
+import { ref, computed } from 'vue';
 import { useDark } from '@vueuse/core';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -19,6 +19,11 @@ const changePerPage = () => {
 };
 
 const isDark = useDark();
+
+const permissions = computed(() => usePage().props.auth.permissions ?? []);
+const canCreate = computed(() => permissions.value.includes('companies.create'));
+const canUpdate = computed(() => permissions.value.includes('companies.update'));
+const canDelete = computed(() => permissions.value.includes('companies.delete'));
 
 const deleteCompany = (id) => {
     Swal.fire({
@@ -65,7 +70,7 @@ const deleteCompany = (id) => {
         <template #header>
             <div class="flex justify-between items-center">
                 <span>Compañías</span>
-                <Button variant="outline" as-child
+                <Button v-if="canCreate" variant="outline" as-child
                     class="h-9 px-4 border-emerald-600 text-emerald-600 hover:bg-emerald-600 hover:text-white dark:border-emerald-500 dark:text-emerald-400 dark:hover:bg-emerald-500 dark:hover:text-zinc-950 transition-colors">
                     <Link :href="route('companies.create')">
                         + Nueva Compañía
@@ -110,11 +115,11 @@ const deleteCompany = (id) => {
                                     Ver
                                 </Link>
 
-                                <Link :href="route('companies.edit', company.id)"
+                                <Link v-if="canUpdate" :href="route('companies.edit', company.id)"
                                     class="text-primary hover:text-primary/80 font-medium transition-colors text-sm">
                                     Editar
                                 </Link>
-                                <button @click="deleteCompany(company.id)"
+                                <button v-if="canDelete" @click="deleteCompany(company.id)"
                                     class="text-destructive hover:text-destructive/80 font-medium transition-colors text-sm">
                                     Eliminar
                                 </button>

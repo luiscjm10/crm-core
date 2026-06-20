@@ -1,8 +1,8 @@
 <script setup>
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
-import { Head, Link, router } from '@inertiajs/vue3';
+import { Head, Link, router, usePage } from '@inertiajs/vue3';
 import Swal from 'sweetalert2';
-import { ref } from 'vue';
+import { ref, computed } from 'vue';
 import { useDark } from '@vueuse/core';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -20,6 +20,11 @@ const changePerPage = () => {
 };
 
 const isDark = useDark();
+
+const permissions = computed(() => usePage().props.auth.permissions ?? []);
+const canCreate = computed(() => permissions.value.includes('roles.create'));
+const canUpdate = computed(() => permissions.value.includes('roles.update'));
+const canDelete = computed(() => permissions.value.includes('roles.delete'));
 
 const deleteRole = (id, name) => {
     Swal.fire({
@@ -62,7 +67,7 @@ const deleteRole = (id, name) => {
         <template #header>
             <div class="flex justify-between items-center">
                 <span>Roles y Permisos</span>
-                <Button variant="outline" as-child
+                <Button v-if="canCreate" variant="outline" as-child
                     class="h-9 px-4 border-emerald-600 text-emerald-600 hover:bg-emerald-600 hover:text-white dark:border-emerald-500 dark:text-emerald-400 dark:hover:bg-emerald-500 dark:hover:text-zinc-950 transition-colors">
                     <Link :href="route('admin.roles.create')">+ Nuevo Rol</Link>
                 </Button>
@@ -101,11 +106,11 @@ const deleteRole = (id, name) => {
                                 </div>
                             </TableCell>
                             <TableCell class="text-right space-x-3">
-                                <Link :href="route('admin.roles.edit', role.id)"
+                                <Link v-if="canUpdate" :href="route('admin.roles.edit', role.id)"
                                     class="text-primary hover:text-primary/80 font-medium transition-colors text-sm">
                                     Editar
                                 </Link>
-                                <button @click="deleteRole(role.id, role.name)"
+                                <button v-if="canDelete" @click="deleteRole(role.id, role.name)"
                                     class="text-destructive hover:text-destructive/80 font-medium transition-colors text-sm">
                                     Eliminar
                                 </button>

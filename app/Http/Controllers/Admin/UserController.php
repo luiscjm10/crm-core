@@ -14,11 +14,19 @@ use Inertia\Inertia;
 
 class UserController extends Controller
 {
+    public function __construct()
+    {
+        $this->middleware('permission:users.read')->only('index', 'show');
+        $this->middleware('permission:users.create')->only('create', 'store');
+        $this->middleware('permission:users.update')->only('edit', 'update');
+        $this->middleware('permission:users.delete')->only('destroy');
+    }
+
     public function index(Request $request)
     {
         $perPage = in_array($request->input('perPage'), [10, 20, 50, 100]) ? (int) $request->input('perPage') : 10;
 
-        $users = User::with('roles', 'company')->orderBy('id')->paginate($perPage)->appends(['perPage' => $perPage]);
+        $users = User::with('roles', 'company', 'companies')->orderBy('id')->paginate($perPage)->appends(['perPage' => $perPage]);
 
         return Inertia::render('Admin/Users/Index', [
             'users' => $users,
@@ -42,16 +50,18 @@ class UserController extends Controller
             'password' => 'required|string|min:8',
             'company_id' => 'nullable|exists:companies,id',
             'role' => 'nullable|exists:roles,name',
+            'company_ids' => 'nullable|array',
+            'company_ids.*' => 'exists:companies,id',
         ]);
 
-        $createUser->execute($validated, $validated['role'] ?? null);
+        $createUser->execute($validated, $validated['role'] ?? null, $validated['company_ids'] ?? []);
 
         return redirect()->route('admin.users.index');
     }
 
     public function show(User $user)
     {
-        $user->load('roles', 'company');
+        $user->load('roles', 'company', 'companies');
 
         return Inertia::render('Admin/Users/Show', [
             'user' => $user,
@@ -60,7 +70,7 @@ class UserController extends Controller
 
     public function edit(User $user)
     {
-        $user->load('roles');
+        $user->load('roles', 'companies');
 
         return Inertia::render('Admin/Users/Edit', [
             'user' => $user,
@@ -78,9 +88,11 @@ class UserController extends Controller
             'password' => 'nullable|string|min:8',
             'company_id' => 'nullable|exists:companies,id',
             'role' => 'nullable|exists:roles,name',
+            'company_ids' => 'nullable|array',
+            'company_ids.*' => 'exists:companies,id',
         ]);
 
-        $updateUser->execute($user, $validated, $validated['role'] ?? null);
+        $updateUser->execute($user, $validated, $validated['role'] ?? null, $validated['company_ids'] ?? []);
 
         return redirect()->route('admin.users.index');
     }

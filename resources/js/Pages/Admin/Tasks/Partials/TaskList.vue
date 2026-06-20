@@ -13,6 +13,9 @@ import {
 const props = defineProps({
     tasks: Object,
     currentCompanyId: String,
+    canUpdate: { type: Boolean, default: false },
+    canDelete: { type: Boolean, default: false },
+    canComplete: { type: Boolean, default: false },
 });
 
 const emit = defineEmits(['open-task', 'complete-task', 'delete-task']);
@@ -138,15 +141,15 @@ const showCompany = computed(() => props.currentCompanyId === 'all');
                     </TableCell>
                     <TableCell class="text-right">
                         <div class="flex items-center justify-end gap-2" @click.stop>
-                            <button v-if="canComplete(task)" @click="emit('complete-task', task)"
+                            <button v-if="canComplete(task) && props.canComplete" @click="emit('complete-task', task)"
                                 class="text-xs text-emerald-600 dark:text-emerald-400 hover:text-emerald-700 dark:hover:text-emerald-300 font-medium transition-colors">
                                 Completar
                             </button>
-                            <Link :href="route('admin.companies.tasks.edit', [task.company_id, task.id])"
+                            <Link v-if="props.canUpdate" :href="route('admin.companies.tasks.edit', [task.company_id, task.id])"
                                 class="text-xs text-primary hover:text-primary/80 font-medium transition-colors">
                                 Editar
                             </Link>
-                            <button @click="emit('delete-task', task)"
+                            <button v-if="props.canDelete" @click="emit('delete-task', task)"
                                 class="text-xs text-destructive hover:text-destructive/80 font-medium transition-colors">
                                 Eliminar
                             </button>

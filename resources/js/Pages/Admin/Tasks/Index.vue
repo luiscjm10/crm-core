@@ -1,6 +1,6 @@
 <script setup>
 import { ref, computed } from 'vue';
-import { Head, Link, router } from '@inertiajs/vue3';
+import { Head, Link, router, usePage } from '@inertiajs/vue3';
 import Swal from 'sweetalert2';
 import { useDark } from '@vueuse/core';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
@@ -30,6 +30,12 @@ const props = defineProps({
 
 const isDark = useDark();
 const viewMode = ref('kanban');
+
+const taskPermissions = computed(() => usePage().props.auth.permissions ?? []);
+const canCreateTask = computed(() => taskPermissions.value.includes('tasks.create'));
+const canUpdateTask = computed(() => taskPermissions.value.includes('tasks.update'));
+const canDeleteTask = computed(() => taskPermissions.value.includes('tasks.delete'));
+const canCompleteTask = computed(() => taskPermissions.value.includes('tasks.complete'));
 
 const typeIcons = {
     general: Flag,
@@ -246,7 +252,7 @@ const viewComponents = {
                     </svg>
                 </div>
 
-                <Button @click="handleCreateClick"
+                <Button v-if="canCreateTask" @click="handleCreateClick"
                     class="h-9 px-4 bg-emerald-600 hover:bg-emerald-700 text-white dark:bg-emerald-600 dark:hover:bg-emerald-500 dark:text-zinc-950 transition-colors">
                     + Nueva Tarea
                 </Button>
@@ -257,7 +263,7 @@ const viewComponents = {
         <div v-if="!tasks.data || tasks.data.length === 0"
             class="flex flex-col items-center justify-center text-center">
             <p class="text-lg text-muted-foreground mb-4">No hay tareas registradas aún.</p>
-            <Button @click="handleCreateClick"
+            <Button v-if="canCreateTask" @click="handleCreateClick"
                 class="bg-emerald-600 hover:bg-emerald-700 text-white dark:bg-emerald-600 dark:hover:bg-emerald-500 dark:text-zinc-950">
                 + Crear primera tarea
             </Button>
@@ -271,6 +277,9 @@ const viewComponents = {
             :types="types"
             :priorities="priorities"
             :current-company-id="currentCompanyId"
+            :can-update="canUpdateTask"
+            :can-delete="canDeleteTask"
+            :can-complete="canCompleteTask"
             @open-task="openTaskModal"
             @complete-task="completeTask"
             @delete-task="deleteTask"
@@ -370,16 +379,16 @@ const viewComponents = {
                 </div>
 
                 <DialogFooter>
-                    <Button v-if="canComplete(selectedTask)" @click="completeTask(selectedTask)"
+                    <Button v-if="canComplete(selectedTask) && canCompleteTask" @click="completeTask(selectedTask)"
                         class="bg-emerald-600 hover:bg-emerald-700 text-white dark:bg-emerald-600 dark:hover:bg-emerald-500 dark:text-zinc-950">
                         Completar
                     </Button>
-                    <Button as-child variant="outline">
+                    <Button v-if="canUpdateTask" as-child variant="outline">
                         <Link :href="route('admin.companies.tasks.edit', [selectedTask?.company_id, selectedTask?.id])">
                             Editar
                         </Link>
                     </Button>
-                    <Button variant="destructive" @click="deleteTask(selectedTask)">
+                    <Button v-if="canDeleteTask" variant="destructive" @click="deleteTask(selectedTask)">
                         Eliminar
                     </Button>
                 </DialogFooter>

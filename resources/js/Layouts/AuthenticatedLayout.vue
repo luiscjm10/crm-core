@@ -13,9 +13,16 @@ const isDark = useDark();
 const toggleDark = useToggle(isDark);
 
 const page = usePage();
-const user = page.props.auth.user;
-const isSuperAdmin = user?.roles?.some(r => r.name === 'super-admin');
-const isOnAdminRoute = computed(() => route().current('admin.users.*') || route().current('admin.roles.*'));
+const permissions = computed(() => page.props.auth.permissions ?? []);
+const hasPermission = (perm) => permissions.value.includes(perm);
+const canViewTickets = computed(() => hasPermission('tickets.read'));
+const canViewTicketTypes = computed(() => hasPermission('ticket-types.read'));
+const canViewTasks = computed(() => hasPermission('tasks.read'));
+const canViewCompanies = computed(() => hasPermission('companies.read'));
+const canViewUsers = computed(() => hasPermission('users.read'));
+const canViewRoles = computed(() => hasPermission('roles.read'));
+const canViewAdmin = computed(() => canViewUsers.value || canViewRoles.value || canViewTicketTypes.value);
+const isOnAdminRoute = computed(() => route().current('admin.users.*') || route().current('admin.roles.*') || route().current('admin.ticket-types.*'));
 const isAdminOpen = ref(isOnAdminRoute.value);
 </script>
 
@@ -45,7 +52,7 @@ const isAdminOpen = ref(isOnAdminRoute.value);
                     Dashboard
                 </Link>
 
-                <Link :href="route('companies.index')"
+                <Link v-if="canViewCompanies" :href="route('companies.index')"
                     :class="[route().current('companies.*') ? 'bg-emerald-600 text-white dark:text-zinc-950 font-semibold shadow-lg shadow-emerald-600/20' : 'text-gray-600 dark:text-zinc-400 hover:bg-gray-100 dark:hover:bg-zinc-800 hover:text-gray-900 dark:hover:text-zinc-100', 'flex items-center px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 mt-2']">
                     <svg class="mr-3 h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -54,7 +61,17 @@ const isAdminOpen = ref(isOnAdminRoute.value);
                     Compañías
                 </Link>
 
-                <div v-if="isSuperAdmin" class="mt-2">
+                <div v-if="canViewTickets" class="mt-2">
+                    <Link :href="route('admin.tickets.index')"
+                        :class="[route().current('admin.tickets.*') ? 'bg-emerald-600 text-white dark:text-zinc-950 font-semibold shadow-lg shadow-emerald-600/20' : 'text-gray-600 dark:text-zinc-400 hover:bg-gray-100 dark:hover:bg-zinc-800 hover:text-gray-900 dark:hover:text-zinc-100', 'flex items-center px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200']">
+                        <svg class="mr-3 h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
+                        </svg>
+                        Solicitudes
+                    </Link>
+                </div>
+
+                <div v-if="canViewTasks" class="mt-2">
                     <Link :href="route('admin.tasks.index')"
                         :class="[route().current('admin.tasks.index') || route().current('admin.companies.tasks.*') ? 'bg-emerald-600 text-white dark:text-zinc-950 font-semibold shadow-lg shadow-emerald-600/20' : 'text-gray-600 dark:text-zinc-400 hover:bg-gray-100 dark:hover:bg-zinc-800 hover:text-gray-900 dark:hover:text-zinc-100', 'flex items-center px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200']">
                         <svg class="mr-3 h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -65,7 +82,7 @@ const isAdminOpen = ref(isOnAdminRoute.value);
                     </Link>
                 </div>
 
-                <div v-if="isSuperAdmin" class="mt-2">
+                <div v-if="canViewAdmin" class="mt-2">
                     <button @click="isAdminOpen = !isAdminOpen"
                         class="w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-sm font-medium text-gray-600 dark:text-zinc-400 hover:bg-gray-100 dark:hover:bg-zinc-800 hover:text-gray-900 dark:hover:text-zinc-100 transition-all duration-200">
                         <span class="flex items-center">
@@ -81,7 +98,7 @@ const isAdminOpen = ref(isOnAdminRoute.value);
                             :class="[isAdminOpen ? 'rotate-180' : '', 'h-4 w-4 transition-transform duration-200']" />
                     </button>
                     <div v-show="isAdminOpen" class="ml-4 mt-1 space-y-1">
-                        <Link :href="route('admin.users.index')"
+                        <Link v-if="canViewUsers" :href="route('admin.users.index')"
                             :class="[route().current('admin.users.*') ? 'bg-emerald-600 text-white dark:text-zinc-950 font-semibold' : 'text-gray-600 dark:text-zinc-400 hover:bg-gray-100 dark:hover:bg-zinc-800 hover:text-gray-900 dark:hover:text-zinc-100', 'flex items-center px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200']">
                             <svg class="mr-3 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -89,13 +106,21 @@ const isAdminOpen = ref(isOnAdminRoute.value);
                             </svg>
                             Usuarios
                         </Link>
-                        <Link :href="route('admin.roles.index')"
+                        <Link v-if="canViewRoles" :href="route('admin.roles.index')"
                             :class="[route().current('admin.roles.*') ? 'bg-emerald-600 text-white dark:text-zinc-950 font-semibold' : 'text-gray-600 dark:text-zinc-400 hover:bg-gray-100 dark:hover:bg-zinc-800 hover:text-gray-900 dark:hover:text-zinc-100', 'flex items-center px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200']">
                             <svg class="mr-3 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                     d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
                             </svg>
                             Roles y Permisos
+                        </Link>
+                        <Link v-if="canViewTicketTypes" :href="route('admin.ticket-types.index')"
+                            :class="[route().current('admin.ticket-types.*') ? 'bg-emerald-600 text-white dark:text-zinc-950 font-semibold' : 'text-gray-600 dark:text-zinc-400 hover:bg-gray-100 dark:hover:bg-zinc-800 hover:text-gray-900 dark:hover:text-zinc-100', 'flex items-center px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200']">
+                            <svg class="mr-3 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                            </svg>
+                            Tipos de Solicitud
                         </Link>
                     </div>
                 </div>

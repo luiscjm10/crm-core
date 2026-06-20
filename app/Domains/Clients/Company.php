@@ -3,9 +3,12 @@
 namespace App\Domains\Clients;
 
 use App\Domains\Projects\Task;
+use App\Domains\Tickets\Ticket;
+use App\Domains\Tickets\TicketType;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Company extends Model
@@ -33,8 +36,23 @@ class Company extends Model
         return $this->hasMany(User::class);
     }
 
+    public function assignedUsers(): BelongsToMany
+    {
+        return $this->belongsToMany(User::class, 'company_user')->withTimestamps();
+    }
+
     public function tasks(): HasMany
     {
         return $this->hasMany(Task::class);
+    }
+
+    public function ticketTypes(): BelongsToMany
+    {
+        return $this->belongsToMany(TicketType::class, 'company_ticket_type');
+    }
+
+    public function tickets(): HasMany
+    {
+        return $this->hasMany(Ticket::class);
     }
 }

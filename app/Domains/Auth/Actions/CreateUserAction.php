@@ -8,7 +8,7 @@ use Spatie\Permission\Models\Role;
 
 class CreateUserAction
 {
-    public function execute(array $data, ?string $roleName = null): User
+    public function execute(array $data, ?string $roleName = null, array $companyIds = []): User
     {
         $user = User::create([
             'name' => $data['name'],
@@ -17,6 +17,10 @@ class CreateUserAction
             'password' => Hash::make($data['password']),
             'company_id' => $data['company_id'] ?? null,
         ]);
+
+        if (!empty($companyIds)) {
+            $user->companies()->sync($companyIds);
+        }
 
         if ($roleName) {
             $role = Role::findByName($roleName, 'web');

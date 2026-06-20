@@ -1,12 +1,17 @@
 <script setup>
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
-import { Head, Link } from '@inertiajs/vue3';
+import { Head, Link, usePage } from '@inertiajs/vue3';
+import { computed } from 'vue';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 
 defineProps({
     user: Object,
 });
+
+const canUpdate = computed(() =>
+    usePage().props.auth.permissions?.includes('users.update')
+);
 </script>
 
 <template>
@@ -33,7 +38,7 @@ defineProps({
                     <CardTitle class="text-xl">{{ user.name }}</CardTitle>
                     <CardDescription>Información general del usuario.</CardDescription>
                 </div>
-                <Button variant="outline" as-child
+                <Button v-if="canUpdate" variant="outline" as-child
                     class="border-gray-300 dark:border-zinc-700 text-gray-700 dark:text-zinc-300 hover:bg-gray-100 dark:hover:bg-zinc-800">
                     <Link :href="route('admin.users.edit', user.id)">Editar Datos</Link>
                 </Button>
@@ -62,6 +67,29 @@ defineProps({
                         <p class="text-sm font-medium text-gray-500 dark:text-zinc-500">Compañía</p>
                         <p class="text-base text-gray-900 dark:text-zinc-100 font-medium">
                             {{ user.company?.name || 'No asignada' }}
+                        </p>
+                    </div>
+                    <div class="space-y-1">
+                        <p class="text-sm font-medium text-gray-500 dark:text-zinc-500">Compañías asignadas</p>
+                        <p class="text-base text-gray-900 dark:text-zinc-100 font-medium">
+                            <template v-if="user.companies?.length">
+                                <span v-for="(c, i) in user.companies" :key="c.id">
+                                    {{ c.name }}<template v-if="i < user.companies.length - 1">, </template>
+                                </span>
+                            </template>
+                            <span v-else class="text-zinc-400 dark:text-zinc-500">Ninguna</span>
+                        </p>
+                    </div>
+                    <div class="space-y-1">
+                        <p class="text-sm font-medium text-gray-500 dark:text-zinc-500">Fecha de registro</p>
+                        <p class="text-base text-gray-900 dark:text-zinc-100 font-medium">
+                            {{ new Date(user.created_at).toLocaleDateString('es-MX', { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' }) }}
+                        </p>
+                    </div>
+                    <div class="space-y-1">
+                        <p class="text-sm font-medium text-gray-500 dark:text-zinc-500">Última actualización</p>
+                        <p class="text-base text-gray-900 dark:text-zinc-100 font-medium">
+                            {{ new Date(user.updated_at).toLocaleDateString('es-MX', { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' }) }}
                         </p>
                     </div>
                 </div>

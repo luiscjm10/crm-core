@@ -11,6 +11,14 @@ use Inertia\Inertia;
 
 class CompanyController extends Controller
 {
+    public function __construct()
+    {
+        $this->middleware('permission:companies.read')->only('index', 'show');
+        $this->middleware('permission:companies.create')->only('create', 'store');
+        $this->middleware('permission:companies.update')->only('edit', 'update');
+        $this->middleware('permission:companies.delete')->only('destroy');
+    }
+
     public function index(Request $request)
     {
         $perPage = in_array($request->input('perPage'), [10, 20, 50, 100]) ? (int) $request->input('perPage') : 10;

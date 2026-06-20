@@ -8,6 +8,9 @@ import { VueDraggable as draggable } from 'vue-draggable-plus';
 const props = defineProps({
     tasks: Object,
     statuses: Array,
+    canUpdate: { type: Boolean, default: false },
+    canDelete: { type: Boolean, default: false },
+    canComplete: { type: Boolean, default: false },
 });
 
 const emit = defineEmits(['open-task', 'complete-task', 'delete-task']);
@@ -168,16 +171,16 @@ const handleDragEnd = (evt) => {
                                 </span>
                             </div>
                             <div class="flex items-center gap-2 pt-1">
-                                <button v-if="canComplete(task)" @click.stop="emit('complete-task', task)"
+                                <button v-if="canComplete(task) && props.canComplete" @click.stop="emit('complete-task', task)"
                                     class="text-xs text-emerald-600 dark:text-emerald-400 hover:text-emerald-700 dark:hover:text-emerald-300 font-medium transition-colors">
                                     Completar
                                 </button>
-                                <Link :href="route('admin.companies.tasks.edit', [task.company_id, task.id])"
+                                <Link v-if="props.canUpdate" :href="route('admin.companies.tasks.edit', [task.company_id, task.id])"
                                     @click.stop
                                     class="text-xs text-primary hover:text-primary/80 font-medium transition-colors">
                                     Editar
                                 </Link>
-                                <button @click.stop="emit('delete-task', task)"
+                                <button v-if="props.canDelete" @click.stop="emit('delete-task', task)"
                                     class="text-xs text-destructive hover:text-destructive/80 font-medium transition-colors">
                                     Eliminar
                                 </button>

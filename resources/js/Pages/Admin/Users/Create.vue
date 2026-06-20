@@ -19,6 +19,7 @@ const form = useForm({
     password_confirmation: '',
     role: '',
     company_id: '',
+    company_ids: [],
 });
 
 const submit = () => {
@@ -90,12 +91,23 @@ const submit = () => {
                         </div>
 
                         <div class="space-y-2">
-                            <Label for="company_id">Compañía</Label>
+                            <Label for="company_id">Compañía principal</Label>
                             <select id="company_id" v-model="form.company_id"
                                 class="flex w-full rounded-md border border-gray-300 dark:border-zinc-800 bg-white dark:bg-zinc-950 px-3 py-2 text-sm text-gray-900 dark:text-zinc-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500">
                                 <option value="">Seleccionar compañía...</option>
                                 <option v-for="company in companies" :key="company.id" :value="company.id">{{ company.name }}</option>
                             </select>
+                        </div>
+                    </div>
+
+                    <div class="space-y-2">
+                        <Label>Compañías asignadas</Label>
+                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 border border-gray-200 dark:border-zinc-800 rounded-md p-3 max-h-48 overflow-y-auto">
+                            <div v-for="company in companies" :key="company.id" class="flex items-center gap-2">
+                                <input :id="'create_company_' + company.id" type="checkbox" :value="company.id" v-model="form.company_ids"
+                                    class="rounded border-gray-300 dark:border-zinc-800 text-emerald-600 focus:ring-emerald-500 dark:bg-zinc-950" />
+                                <Label :for="'create_company_' + company.id" class="cursor-pointer text-sm font-normal">{{ company.name }}</Label>
+                            </div>
                         </div>
                     </div>
 

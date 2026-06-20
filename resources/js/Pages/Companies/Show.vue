@@ -1,12 +1,17 @@
 <script setup>
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
-import { Head, Link } from '@inertiajs/vue3';
+import { Head, Link, usePage } from '@inertiajs/vue3';
+import { computed } from 'vue';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 
 defineProps({
     company: Object,
 });
+
+const canUpdate = computed(() =>
+    usePage().props.auth.permissions?.includes('companies.update')
+);
 </script>
 
 <template>
@@ -36,7 +41,7 @@ defineProps({
                         Información general y datos de contacto registrados.
                     </CardDescription>
                 </div>
-                <Button variant="outline" as-child
+                <Button v-if="canUpdate" variant="outline" as-child
                     class="border-gray-300 dark:border-zinc-700 text-gray-700 dark:text-zinc-300 hover:bg-gray-100 dark:hover:bg-zinc-800 transition-colors">
                     <Link :href="route('companies.edit', company.id)">Editar Datos</Link>
                 </Button>

@@ -84,3 +84,4 @@ composer run dev                                    # Alias: server+queue+logs+V
 - Antes de escribir código, verifica si el archivo ya existe
 - Mantén el estilo de código existente al modificar
 - Si tienes dudas sobre un cambio estructural, pregunta antes de ejecutar
+- **NUNCA hacer commit sin autorización explícita del usuario** — espera a que el usuario indique "commit" o "guarda los cambios"

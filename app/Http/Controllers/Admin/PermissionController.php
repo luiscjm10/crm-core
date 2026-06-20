@@ -8,6 +8,11 @@ use Inertia\Inertia;
 
 class PermissionController extends Controller
 {
+    public function __construct()
+    {
+        $this->middleware('permission:roles.read')->only('index');
+    }
+
     public function index()
     {
         $permissions = Permission::all();

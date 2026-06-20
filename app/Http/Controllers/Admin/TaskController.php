@@ -18,6 +18,15 @@ use Inertia\Inertia;
 
 class TaskController extends Controller
 {
+    public function __construct()
+    {
+        $this->middleware('permission:tasks.read')->only('index', 'show');
+        $this->middleware('permission:tasks.create')->only('create', 'store');
+        $this->middleware('permission:tasks.update')->only('edit', 'update', 'updateStatus');
+        $this->middleware('permission:tasks.complete')->only('complete');
+        $this->middleware('permission:tasks.delete')->only('destroy');
+    }
+
     public function index(Request $request)
     {
         $perPage = in_array($request->input('perPage'), [10, 20, 50, 100]) ? (int) $request->input('perPage') : 10;

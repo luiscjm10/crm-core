@@ -1,8 +1,9 @@
 <script setup>
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
-import { Head, Link, router } from '@inertiajs/vue3';
+import { Head, Link, router, usePage } from '@inertiajs/vue3';
 import { Flag, MapPin, Wrench, Code } from '@lucide/vue';
 import { useDark } from '@vueuse/core';
+import { computed } from 'vue';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 
@@ -12,6 +13,10 @@ const props = defineProps({
 });
 
 const isDark = useDark();
+
+const taskPerms = computed(() => usePage().props.auth.permissions ?? []);
+const canUpdateTask = computed(() => taskPerms.value.includes('tasks.update'));
+const canCompleteTask = computed(() => taskPerms.value.includes('tasks.complete'));
 
 const typeIcons = {
     general: Flag,
@@ -108,11 +113,11 @@ const completeTask = () => {
                     <CardDescription>Información general de la tarea.</CardDescription>
                 </div>
                 <div class="flex items-center gap-2 shrink-0">
-                    <Button v-if="canComplete" @click="completeTask"
+                    <Button v-if="canComplete && canCompleteTask" @click="completeTask"
                         class="bg-emerald-600 text-white hover:bg-emerald-700 dark:bg-emerald-600 dark:hover:bg-emerald-500 text-sm">
                         Completar
                     </Button>
-                    <Button variant="outline" as-child
+                    <Button v-if="canUpdateTask" variant="outline" as-child
                         class="border-gray-300 dark:border-zinc-700 text-gray-700 dark:text-zinc-300 hover:bg-gray-100 dark:hover:bg-zinc-800">
                         <Link :href="route('admin.companies.tasks.edit', [props.company.id, props.task.id])">Editar</Link>
                     </Button>

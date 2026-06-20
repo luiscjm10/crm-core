@@ -18,6 +18,9 @@ const isDark = useDark();
 const canCreateTicket = computed(() =>
     usePage().props.auth.permissions?.includes('tickets.create')
 );
+const canDeleteTicket = computed(() =>
+    usePage().props.auth.permissions?.includes('tickets.delete')
+);
 
 const statusLabels = {
     open: 'Abierto',
@@ -131,7 +134,7 @@ const deleteTicket = (ticket) => {
                                     class="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 font-medium transition-colors text-sm">
                                     Ver
                                 </Link>
-                                <button @click="deleteTicket(ticket)"
+                                <button v-if="canDeleteTicket" @click="deleteTicket(ticket)"
                                     class="text-destructive hover:text-destructive/80 font-medium transition-colors text-sm">
                                     Eliminar
                                 </button>

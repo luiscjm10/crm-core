@@ -1,23 +1,30 @@
 <script setup>
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import { Head, Link, useForm, usePage } from '@inertiajs/vue3';
-import { ref, watch } from 'vue';
+import { ref, computed, watch } from 'vue';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 
 const props = defineProps({
     companies: Array,
+    canAssignRequester: Boolean,
 });
+
+const permissions = computed(() => usePage().props.auth.permissions ?? []);
+const hasAssignRequester = computed(() => props.canAssignRequester || permissions.value.includes('tickets.assign-requester'));
 
 const form = useForm({
     company_id: '',
     ticket_type_id: '',
     description: '',
+    requester_id: '',
 });
 
 const ticketTypes = ref([]);
 const loadingTypes = ref(false);
+const companyUsers = ref([]);
+const loadingUsers = ref(false);
 
 watch(() => form.company_id, async (companyId) => {
     form.ticket_type_id = '';
@@ -33,11 +40,29 @@ watch(() => form.company_id, async (companyId) => {
     } finally {
         loadingTypes.value = false;
     }
+
+    if (hasAssignRequester.value) {
+        form.requester_id = '';
+        companyUsers.value = [];
+        loadingUsers.value = true;
+
+        try {
+            const response = await fetch(`/api/companies/${companyId}/users`);
+            companyUsers.value = await response.json();
+        } finally {
+            loadingUsers.value = false;
+        }
+    }
 });
 
 const submit = () => {
     form.post(route('admin.tickets.store'));
 };
+
+const selectedRequesterName = computed(() => {
+    const user = companyUsers.value.find(u => u.id == form.requester_id);
+    return user ? `${user.name} ${user.last_name ?? ''}`.trim() : null;
+});
 </script>
 
 <template>
@@ -91,6 +116,21 @@ const submit = () => {
                                 </div>
                             </div>
 
+                            <div v-if="hasAssignRequester" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div class="space-y-2">
+                                    <Label for="requester_id">Solicitante</Label>
+                                    <select id="requester_id" v-model="form.requester_id"
+                                        :disabled="!form.company_id || loadingUsers"
+                                        class="flex w-full rounded-md border border-gray-300 dark:border-zinc-800 bg-white dark:bg-zinc-950 px-3 py-2 text-sm text-gray-900 dark:text-zinc-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 disabled:opacity-50 disabled:cursor-not-allowed">
+                                        <option value="">
+                                            {{ loadingUsers ? 'Cargando...' : 'Seleccionar solicitante...' }}
+                                        </option>
+                                        <option v-for="user in companyUsers" :key="user.id" :value="user.id">{{ user.name }} {{ user.last_name ?? '' }}</option>
+                                    </select>
+                                    <p class="text-sm text-red-500" v-if="form.errors.requester_id">{{ form.errors.requester_id }}</p>
+                                </div>
+                            </div>
+
                             <div class="space-y-2">
                                 <Label for="description">Descripción <span class="text-red-500">*</span></Label>
                                 <textarea id="description" v-model="form.description" rows="6" required
@@ -121,7 +161,9 @@ const submit = () => {
                     <CardContent class="space-y-4 text-sm">
                         <div>
                             <p class="text-gray-500 dark:text-zinc-500 font-medium">Solicitante</p>
-                            <p class="text-gray-900 dark:text-zinc-100">{{ usePage().props.auth.user.name }} {{ usePage().props.auth.user.last_name }}</p>
+                            <p class="text-gray-900 dark:text-zinc-100">
+                                {{ selectedRequesterName || usePage().props.auth.user.name + ' ' + (usePage().props.auth.user.last_name || '') }}
+                            </p>
                         </div>
                         <div>
                             <p class="text-gray-500 dark:text-zinc-500 font-medium">Estado inicial</p>

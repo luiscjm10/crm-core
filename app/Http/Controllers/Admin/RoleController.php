@@ -13,6 +13,14 @@ use Inertia\Inertia;
 
 class RoleController extends Controller
 {
+    public function __construct()
+    {
+        $this->middleware('permission:roles.read')->only('index');
+        $this->middleware('permission:roles.create')->only('create', 'store');
+        $this->middleware('permission:roles.update')->only('edit', 'update');
+        $this->middleware('permission:roles.delete')->only('destroy');
+    }
+
     public function index(Request $request)
     {
         $perPage = in_array($request->input('perPage'), [10, 20, 50, 100]) ? (int) $request->input('perPage') : 10;
