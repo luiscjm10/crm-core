@@ -120,21 +120,31 @@ const deleteTicket = (ticket) => {
                         <TableRow>
                             <TableHead class="w-24">UUID</TableHead>
                             <TableHead>Compañía</TableHead>
-                            <TableHead class="cursor-pointer select-none hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors" @click="sortBy('ticket_type')">
+                            <TableHead
+                                class="cursor-pointer select-none hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors"
+                                @click="sortBy('ticket_type')">
                                 Tipo<span class="text-xs">{{ sortArrow('ticket_type') }}</span>
                             </TableHead>
-                            <TableHead class="cursor-pointer select-none hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors" @click="sortBy('status')">
+                            <TableHead
+                                class="cursor-pointer select-none hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors"
+                                @click="sortBy('status')">
                                 Estado<span class="text-xs">{{ sortArrow('status') }}</span>
                             </TableHead>
                             <TableHead>Solicitante</TableHead>
                             <TableHead>Asignado</TableHead>
-                            <TableHead class="cursor-pointer select-none hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors" @click="sortBy('requested_at')">
+                            <TableHead
+                                class="cursor-pointer select-none hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors"
+                                @click="sortBy('requested_at')">
                                 Fecha Solicitud<span class="text-xs">{{ sortArrow('requested_at') }}</span>
                             </TableHead>
-                            <TableHead class="cursor-pointer select-none hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors" @click="sortBy('updated_at')">
+                            <TableHead
+                                class="cursor-pointer select-none hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors"
+                                @click="sortBy('updated_at')">
                                 Actualización<span class="text-xs">{{ sortArrow('updated_at') }}</span>
                             </TableHead>
-                            <TableHead class="cursor-pointer select-none hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors" @click="sortBy('created_at')">
+                            <TableHead
+                                class="cursor-pointer select-none hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors"
+                                @click="sortBy('created_at')">
                                 Creado<span class="text-xs">{{ sortArrow('created_at') }}</span>
                             </TableHead>
                             <TableHead v-if="canViewResolutionTime">Tiempo Resolución</TableHead>
@@ -144,28 +154,42 @@ const deleteTicket = (ticket) => {
                     </TableHeader>
                     <TableBody>
                         <TableRow v-if="tickets.data.length === 0">
-                            <TableCell :colspan="canViewResolutionTime ? 12 : 11" class="text-center text-muted-foreground h-24">
+                            <TableCell :colspan="canViewResolutionTime ? 12 : 11"
+                                class="text-center text-muted-foreground h-24">
                                 No hay solicitudes registradas aún.
                             </TableCell>
                         </TableRow>
                         <TableRow v-for="ticket in tickets.data" :key="ticket.uuid" v-else>
                             <TableCell class="text-muted-foreground text-sm font-mono">{{ ticket.uuid.slice(0, 8) }}...
                             </TableCell>
-                            <TableCell class="font-medium text-foreground break-words whitespace-normal">{{ ticket.company?.name || '—' }}</TableCell>
-                            <TableCell class="text-muted-foreground break-words whitespace-normal">{{ ticket.ticket_type?.name || '—' }}</TableCell>
+                            <TableCell class="font-medium text-foreground break-words whitespace-normal">{{
+                                ticket.company?.name
+                                || '—' }}</TableCell>
+                            <TableCell class="text-muted-foreground break-words whitespace-normal">{{
+                                ticket.ticket_type?.name
+                                || '—' }}</TableCell>
                             <TableCell>
                                 <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium"
                                     :class="statusColors[ticket.status] || 'bg-zinc-100 text-zinc-800 dark:bg-zinc-800 dark:text-zinc-300'">
                                     {{ statusLabels[ticket.status] || ticket.status }}
                                 </span>
                             </TableCell>
-                            <TableCell class="text-muted-foreground break-words whitespace-normal">{{ ticket.requester?.name || '—' }}</TableCell>
-                            <TableCell class="text-muted-foreground break-words whitespace-normal">{{ ticket.assignee?.name || '—' }}</TableCell>
-                            <TableCell class="text-muted-foreground text-sm">{{ formatDateOnly(ticket.requested_at) }}</TableCell>
-                            <TableCell class="text-muted-foreground text-sm">{{ formatDateTime(ticket.updated_at) }}</TableCell>
-                            <TableCell class="text-muted-foreground text-sm">{{ formatDateTime(ticket.created_at) }}</TableCell>
-                            <TableCell v-if="canViewResolutionTime" class="text-muted-foreground text-sm">{{ ticket.resolution_time_human || '—' }}</TableCell>
-                            <TableCell class="text-muted-foreground text-sm">{{ formatMinutes(ticket.comments_sum_time_spent_minutes) }}</TableCell>
+                            <TableCell class="text-muted-foreground break-words whitespace-normal">{{
+                                ticket.requester?.name ||
+                                '—' }}</TableCell>
+                            <TableCell class="text-muted-foreground break-words whitespace-normal">{{
+                                ticket.assignee?.name ||
+                                '—' }}</TableCell>
+                            <TableCell class="text-muted-foreground text-sm">{{ formatDateOnly(ticket.requested_at) }}
+                            </TableCell>
+                            <TableCell class="text-muted-foreground break-words whitespace-normal text-sm">{{
+                                formatDateTime(ticket.updated_at) }}</TableCell>
+                            <TableCell class="text-muted-foreground break-words whitespace-normal text-sm">{{
+                                formatDateTime(ticket.created_at) }}</TableCell>
+                            <TableCell v-if="canViewResolutionTime" class="text-muted-foreground text-sm">{{
+                                ticket.resolution_time_human || '—' }}</TableCell>
+                            <TableCell class="text-muted-foreground text-sm">{{
+                                formatMinutes(ticket.comments_sum_time_spent_minutes) }}</TableCell>
                             <TableCell class="text-right space-x-3">
                                 <Link :href="route('admin.tickets.show', ticket.uuid)"
                                     class="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 font-medium transition-colors text-sm">
@@ -195,7 +219,7 @@ const deleteTicket = (ticket) => {
                     <p class="text-sm text-gray-500 dark:text-zinc-400">
                         Mostrando <span class="font-medium">{{ tickets.from }}</span> a <span class="font-medium">{{
                             tickets.to
-                        }}</span> de <span class="font-medium">{{ tickets.total }}</span> registros
+                            }}</span> de <span class="font-medium">{{ tickets.total }}</span> registros
                     </p>
                     <div v-if="tickets.links?.length > 3" class="flex items-center gap-1">
                         <template v-for="(link, i) in tickets.links" :key="i">
