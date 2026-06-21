@@ -127,13 +127,13 @@ class TicketController extends Controller
 
         $requesterId = $validated['requester_id'] ?? $request->user()->id;
 
-        $createTicket->execute(
+        $ticket = $createTicket->execute(
             $validated,
             creatorId: $request->user()->id,
             requesterId: $requesterId
         );
 
-        return redirect()->route('admin.tickets.index');
+        return redirect()->route('admin.tickets.show', $ticket);
     }
 
     public function show(Request $request, Ticket $ticket)
