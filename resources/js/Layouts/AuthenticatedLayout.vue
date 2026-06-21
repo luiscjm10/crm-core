@@ -6,8 +6,8 @@ import DropdownLink from '@/Components/DropdownLink.vue';
 import { Link, usePage } from '@inertiajs/vue3';
 
 // 1. Importamos la lógica de VueUse y los iconos de Lucide
-import { useDark, useToggle } from '@vueuse/core';
-import { Moon, Sun, ChevronDown } from 'lucide-vue-next';
+import { useDark, useToggle, useMediaQuery } from '@vueuse/core';
+import { Moon, Sun, ChevronDown, Menu, X } from 'lucide-vue-next';
 
 const isDark = useDark();
 const toggleDark = useToggle(isDark);
@@ -24,14 +24,22 @@ const canViewRoles = computed(() => hasPermission('roles.read'));
 const canViewAdmin = computed(() => canViewUsers.value || canViewRoles.value || canViewTicketTypes.value);
 const isOnAdminRoute = computed(() => route().current('admin.users.*') || route().current('admin.roles.*') || route().current('admin.ticket-types.*'));
 const isAdminOpen = ref(isOnAdminRoute.value);
+
+const isLargeScreen = useMediaQuery('(min-width: 1024px)');
+const isMobileOpen = ref(false);
 </script>
 
 <template>
     <div
         class="flex h-screen bg-gray-50 dark:bg-zinc-950 text-gray-900 dark:text-zinc-50 font-sans antialiased transition-colors duration-300">
 
+        <div v-if="!isLargeScreen && isMobileOpen"
+            class="fixed inset-0 bg-black/50 z-40 transition-opacity duration-300"
+            @click="isMobileOpen = false" />
+
         <aside
-            class="w-64 flex-shrink-0 bg-white dark:bg-zinc-900 border-r border-gray-200 dark:border-zinc-800 flex flex-col transition-colors duration-300">
+            class="fixed inset-y-0 left-0 z-50 w-64 bg-white dark:bg-zinc-900 border-r border-gray-200 dark:border-zinc-800 flex flex-col transition-all duration-300"
+            :class="isLargeScreen ? 'translate-x-0' : (isMobileOpen ? 'translate-x-0' : '-translate-x-full')">
             <div
                 class="h-16 flex items-center px-6 border-b border-gray-200 dark:border-zinc-800 bg-gray-50 dark:bg-zinc-950/50">
                 <Link :href="route('dashboard')" class="flex items-center gap-3 text-lg font-bold tracking-tight">
@@ -127,11 +135,17 @@ const isAdminOpen = ref(isOnAdminRoute.value);
             </nav>
         </aside>
 
-        <div class="flex-1 flex flex-col overflow-hidden">
+        <div class="flex-1 flex flex-col overflow-hidden lg:ml-64">
             <header
-                class="bg-white dark:bg-zinc-900 border-b border-gray-200 dark:border-zinc-800 flex items-center justify-end h-16 px-6 z-10 transition-colors duration-300">
+                class="bg-white dark:bg-zinc-900 border-b border-gray-200 dark:border-zinc-800 flex items-center justify-between h-16 px-6 z-10 transition-colors duration-300">
 
-                <div class="flex items-center gap-4">
+                <button @click="isMobileOpen = !isMobileOpen"
+                    class="lg:hidden p-2 rounded-lg text-gray-500 hover:bg-gray-100 dark:text-zinc-400 dark:hover:bg-zinc-800 transition-colors">
+                    <Menu v-if="!isMobileOpen" class="w-5 h-5" />
+                    <X v-else class="w-5 h-5" />
+                </button>
+
+                <div class="flex items-center gap-4 ml-auto">
 
                     <button @click="toggleDark()"
                         class="p-2 rounded-lg text-gray-500 hover:bg-gray-100 dark:text-zinc-400 dark:hover:bg-zinc-800 transition-colors">
