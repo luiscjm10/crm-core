@@ -180,7 +180,7 @@ const deleteTicket = (ticket) => {
                             <TableCell class="text-muted-foreground break-words whitespace-normal">{{
                                 ticket.assignee?.name ||
                                 '—' }}</TableCell>
-                            <TableCell class="text-muted-foreground text-sm">{{ formatDateOnly(ticket.requested_at) }}
+                            <TableCell class="text-muted-foreground text-sm">{{ formatDateTime(ticket.requested_at) }}
                             </TableCell>
                             <TableCell class="text-muted-foreground break-words whitespace-normal text-sm">{{
                                 formatDateTime(ticket.updated_at) }}</TableCell>

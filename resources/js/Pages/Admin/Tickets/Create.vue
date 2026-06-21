@@ -136,8 +136,8 @@ const selectedRequesterName = computed(() => {
 
                             <div v-if="hasSetRequestedAt" class="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 <div class="space-y-2">
-                                    <Label for="requested_at">Fecha de Solicitud</Label>
-                                    <input id="requested_at" type="date" v-model="form.requested_at"
+                                    <Label for="requested_at">Fecha y hora de Solicitud</Label>
+                                    <input id="requested_at" type="datetime-local" v-model="form.requested_at"
                                         class="flex w-full rounded-md border border-gray-300 dark:border-zinc-800 bg-white dark:bg-zinc-950 px-3 py-2 text-sm text-gray-900 dark:text-zinc-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500" />
                                     <p class="text-sm text-red-500" v-if="form.errors.requested_at">{{ form.errors.requested_at }}</p>
                                 </div>

@@ -3,7 +3,7 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import { Head, Link, router, useForm } from '@inertiajs/vue3';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { formatDateOnly, formatMinutes } from '@/helpers/date';
+import { formatDateOnly, formatDateTime, formatMinutes } from '@/helpers/date';
 import Swal from 'sweetalert2';
 
 const props = defineProps({
@@ -138,7 +138,7 @@ const formatDate = (date) => {
                     </div>
                     <div class="space-y-1">
                         <p class="text-sm font-medium text-gray-500 dark:text-zinc-500">Fecha de Solicitud</p>
-                        <p class="text-base text-gray-900 dark:text-zinc-100 font-medium">{{ formatDateOnly(ticket.requested_at) }}</p>
+                        <p class="text-base text-gray-900 dark:text-zinc-100 font-medium">{{ formatDateTime(ticket.requested_at) }}</p>
                     </div>
                     <div v-if="canViewResolutionTime && ticket.resolution_time_human" class="space-y-1">
                         <p class="text-sm font-medium text-gray-500 dark:text-zinc-500">Tiempo de resolución</p>

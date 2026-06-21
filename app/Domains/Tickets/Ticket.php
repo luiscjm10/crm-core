@@ -34,7 +34,7 @@ class Ticket extends Model
     protected function casts(): array
     {
         return [
-            'requested_at' => 'date:Y-m-d',
+            'requested_at' => 'datetime',
             'closed_at' => 'datetime',
         ];
     }
