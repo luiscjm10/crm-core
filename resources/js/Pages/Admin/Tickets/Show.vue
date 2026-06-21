@@ -3,7 +3,7 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import { Head, Link, router, useForm } from '@inertiajs/vue3';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { formatDateOnly } from '@/helpers/date';
+import { formatDateOnly, formatMinutes } from '@/helpers/date';
 import Swal from 'sweetalert2';
 
 const props = defineProps({
@@ -146,7 +146,7 @@ const formatDate = (date) => {
                     </div>
                     <div class="space-y-1">
                         <p class="text-sm font-medium text-gray-500 dark:text-zinc-500">Tiempo Total Invertido</p>
-                        <p class="text-base text-gray-900 dark:text-zinc-100 font-medium">{{ ticket.total_time_spent_minutes }} min</p>
+                        <p class="text-base text-gray-900 dark:text-zinc-100 font-medium">{{ formatMinutes(ticket.total_time_spent_minutes) }}</p>
                     </div>
                     <div class="space-y-1">
                         <p class="text-sm font-medium text-gray-500 dark:text-zinc-500">Creado por</p>
@@ -188,7 +188,7 @@ const formatDate = (date) => {
                                 <div class="flex items-center gap-2">
                                     <span v-if="comment.time_spent_minutes > 0"
                                         class="inline-flex items-center gap-1 text-xs text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/50 px-2 py-0.5 rounded-full">
-                                        ⏱️ {{ comment.time_spent_minutes }} min
+                                        ⏱️ {{ formatMinutes(comment.time_spent_minutes) }}
                                     </span>
                                     <span class="text-xs text-zinc-400 dark:text-zinc-500">
                                         {{ formatDate(comment.created_at) }}
@@ -213,7 +213,7 @@ const formatDate = (date) => {
                                 <div v-if="form.errors.content" class="mt-1 text-sm text-red-500">{{ form.errors.content }}</div>
                                 <div v-if="canLogTime" class="mt-3">
                                     <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1" for="time_spent_minutes">
-                                        Tiempo invertido (minutos)
+                                        Tiempo invertido (en minutos)
                                     </label>
                                     <input id="time_spent_minutes" type="number" v-model="form.time_spent_minutes" min="1"
                                         class="flex w-40 rounded-md border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 px-3 py-2 text-sm text-zinc-900 dark:text-zinc-100 placeholder-zinc-400 dark:placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-emerald-500 dark:focus:ring-emerald-400"

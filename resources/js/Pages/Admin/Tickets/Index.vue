@@ -4,7 +4,7 @@ import { Head, Link, router, usePage } from '@inertiajs/vue3';
 import Swal from 'sweetalert2';
 import { ref, computed } from 'vue';
 import { useDark } from '@vueuse/core';
-import { formatDateOnly, formatDateTime } from '@/helpers/date';
+import { formatDateOnly, formatDateTime, formatMinutes } from '@/helpers/date';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -165,7 +165,7 @@ const deleteTicket = (ticket) => {
                             <TableCell class="text-muted-foreground text-sm">{{ formatDateTime(ticket.updated_at) }}</TableCell>
                             <TableCell class="text-muted-foreground text-sm">{{ formatDateTime(ticket.created_at) }}</TableCell>
                             <TableCell v-if="canViewResolutionTime" class="text-muted-foreground text-sm">{{ ticket.resolution_time_human || '—' }}</TableCell>
-                            <TableCell class="text-muted-foreground text-sm">{{ ticket.comments_sum_time_spent_minutes ?? 0 }} min</TableCell>
+                            <TableCell class="text-muted-foreground text-sm">{{ formatMinutes(ticket.comments_sum_time_spent_minutes) }}</TableCell>
                             <TableCell class="text-right space-x-3">
                                 <Link :href="route('admin.tickets.show', ticket.uuid)"
                                     class="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 font-medium transition-colors text-sm">
