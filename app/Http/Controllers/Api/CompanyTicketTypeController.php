@@ -12,6 +12,7 @@ class CompanyTicketTypeController extends Controller
         return response()->json(
             $company->ticketTypes()
                 ->where('is_active', true)
+                ->orderBy('name')
                 ->get(['id', 'name', 'description'])
         );
     }

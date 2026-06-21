@@ -26,7 +26,7 @@ class TicketTypeController extends Controller
         $perPage = in_array($request->input('perPage'), [10, 20, 50, 100]) ? (int) $request->input('perPage') : 10;
 
         $ticketTypes = TicketType::with('companies:id,name')
-            ->latest()
+            ->orderBy('name')
             ->paginate($perPage)
             ->appends(['perPage' => $perPage]);
 
