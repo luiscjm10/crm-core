@@ -145,9 +145,9 @@ const confirmDelete = (ticketType) => {
                             </TableCell>
                         </TableRow>
                         <TableRow v-for="type in ticketTypes.data" :key="type.id" v-else>
-                            <TableCell class="font-medium text-foreground">{{ type.name }}</TableCell>
-                            <TableCell class="text-muted-foreground max-w-xs truncate">{{ type.description || '—' }}</TableCell>
-                            <TableCell class="text-muted-foreground max-w-xs">
+                            <TableCell class="font-medium text-foreground break-words whitespace-normal">{{ type.name }}</TableCell>
+                            <TableCell class="text-muted-foreground break-words whitespace-normal">{{ type.description || '—' }}</TableCell>
+                            <TableCell class="text-muted-foreground break-words whitespace-normal">
                                 <template v-if="type.companies?.length">
                                     <span v-for="(c, i) in type.companies" :key="c.id">
                                         {{ c.name }}<template v-if="i < type.companies.length - 1">, </template>

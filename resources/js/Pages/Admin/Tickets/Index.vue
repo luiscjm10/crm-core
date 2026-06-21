@@ -151,16 +151,16 @@ const deleteTicket = (ticket) => {
                         <TableRow v-for="ticket in tickets.data" :key="ticket.uuid" v-else>
                             <TableCell class="text-muted-foreground text-sm font-mono">{{ ticket.uuid.slice(0, 8) }}...
                             </TableCell>
-                            <TableCell class="font-medium text-foreground">{{ ticket.company?.name || '—' }}</TableCell>
-                            <TableCell class="text-muted-foreground">{{ ticket.ticket_type?.name || '—' }}</TableCell>
+                            <TableCell class="font-medium text-foreground break-words whitespace-normal">{{ ticket.company?.name || '—' }}</TableCell>
+                            <TableCell class="text-muted-foreground break-words whitespace-normal">{{ ticket.ticket_type?.name || '—' }}</TableCell>
                             <TableCell>
                                 <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium"
                                     :class="statusColors[ticket.status] || 'bg-zinc-100 text-zinc-800 dark:bg-zinc-800 dark:text-zinc-300'">
                                     {{ statusLabels[ticket.status] || ticket.status }}
                                 </span>
                             </TableCell>
-                            <TableCell class="text-muted-foreground">{{ ticket.requester?.name || '—' }}</TableCell>
-                            <TableCell class="text-muted-foreground">{{ ticket.assignee?.name || '—' }}</TableCell>
+                            <TableCell class="text-muted-foreground break-words whitespace-normal">{{ ticket.requester?.name || '—' }}</TableCell>
+                            <TableCell class="text-muted-foreground break-words whitespace-normal">{{ ticket.assignee?.name || '—' }}</TableCell>
                             <TableCell class="text-muted-foreground text-sm">{{ formatDateOnly(ticket.requested_at) }}</TableCell>
                             <TableCell class="text-muted-foreground text-sm">{{ formatDateTime(ticket.updated_at) }}</TableCell>
                             <TableCell class="text-muted-foreground text-sm">{{ formatDateTime(ticket.created_at) }}</TableCell>
