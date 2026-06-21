@@ -59,6 +59,9 @@ watch(() => form.company_id, async (companyId) => {
 });
 
 const submit = () => {
+    if (form.requested_at) {
+        form.requested_at = new Date(form.requested_at).toISOString();
+    }
     form.post(route('admin.tickets.store'));
 };
 
