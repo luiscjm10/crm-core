@@ -6,6 +6,7 @@ import { useDark } from '@vueuse/core';
 import { computed } from 'vue';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { formatDateOnly } from '@/helpers/date';
 
 const props = defineProps({
     task: Object,
@@ -83,6 +84,8 @@ const formatDate = (date) => {
     });
 };
 
+const formatDueDate = (task) => formatDateOnly(task.due_date);
+
 const completeTask = () => {
     router.patch(route('admin.companies.tasks.complete', [props.company.id, props.task.id]));
 };
@@ -157,7 +160,7 @@ const completeTask = () => {
 
                     <div class="space-y-1">
                         <p class="text-sm font-medium text-gray-500 dark:text-zinc-500">Fecha de vencimiento</p>
-                        <p class="text-base text-gray-900 dark:text-zinc-100 font-medium">{{ formatDate(task.due_date) }}</p>
+                        <p class="text-base text-gray-900 dark:text-zinc-100 font-medium">{{ formatDueDate(task) }}</p>
                     </div>
 
                     <div class="space-y-1">

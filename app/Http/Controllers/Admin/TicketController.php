@@ -76,6 +76,7 @@ class TicketController extends Controller
         return Inertia::render('Admin/Tickets/Create', [
             'companies' => $companies,
             'canAssignRequester' => $user->can('tickets.assign-requester'),
+            'canSetRequestedAt' => $user->can('tickets.set-requested-at'),
         ]);
     }
 
@@ -99,6 +100,9 @@ class TicketController extends Controller
             ],
             'description' => 'required|string|max:5000',
             'requester_id' => 'nullable|exists:users,id',
+            'requested_at' => $request->user()->can('tickets.set-requested-at')
+                ? 'nullable|date'
+                : 'prohibited',
         ]);
 
         $requesterId = $validated['requester_id'] ?? $request->user()->id;

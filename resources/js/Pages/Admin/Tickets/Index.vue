@@ -4,6 +4,7 @@ import { Head, Link, router, usePage } from '@inertiajs/vue3';
 import Swal from 'sweetalert2';
 import { ref, computed } from 'vue';
 import { useDark } from '@vueuse/core';
+import { formatDateOnly } from '@/helpers/date';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -104,13 +105,14 @@ const deleteTicket = (ticket) => {
                             <TableHead>Estado</TableHead>
                             <TableHead>Solicitante</TableHead>
                             <TableHead>Asignado</TableHead>
+                            <TableHead>Fecha Solicitud</TableHead>
                             <TableHead>Creado</TableHead>
                             <TableHead class="text-right">Acciones</TableHead>
                         </TableRow>
                     </TableHeader>
                     <TableBody>
                         <TableRow v-if="tickets.data.length === 0">
-                            <TableCell colspan="8" class="text-center text-muted-foreground h-24">
+                            <TableCell colspan="9" class="text-center text-muted-foreground h-24">
                                 No hay solicitudes registradas aún.
                             </TableCell>
                         </TableRow>
@@ -127,6 +129,7 @@ const deleteTicket = (ticket) => {
                             </TableCell>
                             <TableCell class="text-muted-foreground">{{ ticket.requester?.name || '—' }}</TableCell>
                             <TableCell class="text-muted-foreground">{{ ticket.assignee?.name || '—' }}</TableCell>
+                            <TableCell class="text-muted-foreground text-sm">{{ formatDateOnly(ticket.requested_at) }}</TableCell>
                             <TableCell class="text-muted-foreground text-sm">{{ new
                                 Date(ticket.created_at).toLocaleDateString('es-MX') }}</TableCell>
                             <TableCell class="text-right space-x-3">

@@ -44,6 +44,7 @@ class RoleAndAdminSeeder extends Seeder
             ['name' => 'tickets.assign-requester', 'description' => 'Seleccionar solicitante al crear ticket', 'group' => 5],
             ['name' => 'tickets.close', 'description' => 'Cerrar tickets del sistema', 'group' => 5],
             ['name' => 'tickets.comment', 'description' => 'Comentar en tickets del sistema', 'group' => 5],
+            ['name' => 'tickets.set-requested-at', 'description' => 'Asignar fecha de solicitud al crear ticket', 'group' => 5],
         ];
 
         $permissionNames = [];

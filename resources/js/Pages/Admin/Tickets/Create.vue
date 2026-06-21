@@ -9,16 +9,19 @@ import { Label } from '@/components/ui/label';
 const props = defineProps({
     companies: Array,
     canAssignRequester: Boolean,
+    canSetRequestedAt: Boolean,
 });
 
 const permissions = computed(() => usePage().props.auth.permissions ?? []);
 const hasAssignRequester = computed(() => props.canAssignRequester || permissions.value.includes('tickets.assign-requester'));
+const hasSetRequestedAt = computed(() => props.canSetRequestedAt || permissions.value.includes('tickets.set-requested-at'));
 
 const form = useForm({
     company_id: '',
     ticket_type_id: '',
     description: '',
     requester_id: '',
+    requested_at: '',
 });
 
 const ticketTypes = ref([]);
@@ -128,6 +131,15 @@ const selectedRequesterName = computed(() => {
                                         <option v-for="user in companyUsers" :key="user.id" :value="user.id">{{ user.name }} {{ user.last_name ?? '' }}</option>
                                     </select>
                                     <p class="text-sm text-red-500" v-if="form.errors.requester_id">{{ form.errors.requester_id }}</p>
+                                </div>
+                            </div>
+
+                            <div v-if="hasSetRequestedAt" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div class="space-y-2">
+                                    <Label for="requested_at">Fecha de Solicitud</Label>
+                                    <input id="requested_at" type="date" v-model="form.requested_at"
+                                        class="flex w-full rounded-md border border-gray-300 dark:border-zinc-800 bg-white dark:bg-zinc-950 px-3 py-2 text-sm text-gray-900 dark:text-zinc-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500" />
+                                    <p class="text-sm text-red-500" v-if="form.errors.requested_at">{{ form.errors.requested_at }}</p>
                                 </div>
                             </div>
 

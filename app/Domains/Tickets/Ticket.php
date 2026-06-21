@@ -22,7 +22,15 @@ class Ticket extends Model
         'assigned_to',
         'status',
         'description',
+        'requested_at',
     ];
+
+    protected function casts(): array
+    {
+        return [
+            'requested_at' => 'date:Y-m-d',
+        ];
+    }
 
     public function getRouteKeyName(): string
     {

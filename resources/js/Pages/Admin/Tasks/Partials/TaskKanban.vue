@@ -4,6 +4,7 @@ import { Link, router } from '@inertiajs/vue3';
 import { Flag, MapPin, Wrench, Code } from '@lucide/vue';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { VueDraggable as draggable } from 'vue-draggable-plus';
+import { formatDateOnly, isOverdue } from '@/helpers/date';
 
 const props = defineProps({
     tasks: Object,
@@ -68,19 +69,7 @@ buildTasksByCol();
 
 watch(() => props.tasks, () => buildTasksByCol(), { deep: true });
 
-const formatDate = (date) => {
-    if (!date) return null;
-    return new Date(date).toLocaleDateString('es-MX', {
-        year: 'numeric',
-        month: 'short',
-        day: 'numeric',
-    });
-};
-
-const isOverdue = (task) => {
-    if (!task.due_date || task.status === 'done' || task.status === 'cancelled') return false;
-    return new Date(task.due_date) < new Date();
-};
+const formatDate = (date) => formatDateOnly(date);
 
 const canComplete = (task) =>
     !['done', 'cancelled'].includes(task.status);

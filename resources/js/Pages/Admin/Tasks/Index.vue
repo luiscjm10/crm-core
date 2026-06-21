@@ -15,6 +15,7 @@ import {
     DialogHeader,
     DialogTitle,
 } from '@/components/ui/dialog';
+import { formatDateOnly, isOverdue } from '@/helpers/date';
 import TaskKanban from './Partials/TaskKanban.vue';
 import TaskList from './Partials/TaskList.vue';
 import TaskCalendar from './Partials/TaskCalendar.vue';
@@ -73,19 +74,7 @@ const statusLabels = {
     cancelled: 'Canceladas',
 };
 
-const formatDate = (date) => {
-    if (!date) return null;
-    return new Date(date).toLocaleDateString('es-MX', {
-        year: 'numeric',
-        month: 'short',
-        day: 'numeric',
-    });
-};
-
-const isOverdue = (task) => {
-    if (!task.due_date || task.status === 'done' || task.status === 'cancelled') return false;
-    return new Date(task.due_date) < new Date();
-};
+const formatDate = (date) => formatDateOnly(date);
 
 const canComplete = (task) =>
     !['done', 'cancelled'].includes(task.status);

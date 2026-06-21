@@ -64,21 +64,10 @@ const statusColors = {
     cancelled: 'bg-red-100 dark:bg-red-900 text-red-700 dark:text-red-300',
 };
 
-const formatDate = (date) => {
-    if (!date) return null;
-    return new Date(date).toLocaleDateString('es-MX', {
-        year: 'numeric',
-        month: 'short',
-        day: 'numeric',
-    });
-};
-
-const isOverdue = (task) => {
-    if (!task.due_date || task.status === 'done' || task.status === 'cancelled') return false;
-    return new Date(task.due_date) < new Date();
-};
+const formatDate = (date) => formatDateOnly(date);
 
 import { computed } from 'vue';
+import { formatDateOnly, isOverdue } from '@/helpers/date';
 
 const canComplete = (task) =>
     !['done', 'cancelled'].includes(task.status);

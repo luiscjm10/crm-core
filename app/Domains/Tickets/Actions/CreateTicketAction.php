@@ -19,6 +19,10 @@ class CreateTicketAction
             $data['requester_id'] = $requesterId;
         }
 
+        if (empty($data['requested_at'])) {
+            $data['requested_at'] = now();
+        }
+
         return Ticket::create($data);
     }
 }
