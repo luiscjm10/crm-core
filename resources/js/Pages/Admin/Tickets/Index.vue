@@ -4,13 +4,15 @@ import { Head, Link, router, usePage } from '@inertiajs/vue3';
 import Swal from 'sweetalert2';
 import { ref, computed } from 'vue';
 import { useDark } from '@vueuse/core';
-import { formatDateOnly } from '@/helpers/date';
+import { formatDateOnly, formatDateTime } from '@/helpers/date';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 
 const props = defineProps({
     tickets: Object,
+    sort: { type: String, default: 'requested_at' },
+    direction: { type: String, default: 'desc' },
 });
 
 const perPage = ref(props.tickets?.per_page ?? 10);
@@ -38,7 +40,21 @@ const statusColors = {
 };
 
 const changePerPage = () => {
-    router.get(route('admin.tickets.index'), { perPage: perPage.value }, { preserveState: true, replace: true });
+    router.get(route('admin.tickets.index'), { ...route().params, perPage: perPage.value }, { preserveState: true, replace: true });
+};
+
+const sortBy = (column) => {
+    const newDirection = props.sort === column && props.direction === 'asc' ? 'desc' : 'asc';
+    router.get(route('admin.tickets.index'), {
+        ...route().params,
+        sort: column,
+        direction: newDirection,
+    }, { preserveState: true, replace: true });
+};
+
+const sortArrow = (column) => {
+    if (props.sort !== column) return '';
+    return props.direction === 'asc' ? ' \u25B2' : ' \u25BC';
 };
 
 const deleteTicket = (ticket) => {
@@ -101,18 +117,29 @@ const deleteTicket = (ticket) => {
                         <TableRow>
                             <TableHead class="w-24">UUID</TableHead>
                             <TableHead>Compañía</TableHead>
-                            <TableHead>Tipo</TableHead>
-                            <TableHead>Estado</TableHead>
+                            <TableHead class="cursor-pointer select-none hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors" @click="sortBy('ticket_type')">
+                                Tipo<span class="text-xs">{{ sortArrow('ticket_type') }}</span>
+                            </TableHead>
+                            <TableHead class="cursor-pointer select-none hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors" @click="sortBy('status')">
+                                Estado<span class="text-xs">{{ sortArrow('status') }}</span>
+                            </TableHead>
                             <TableHead>Solicitante</TableHead>
                             <TableHead>Asignado</TableHead>
-                            <TableHead>Fecha Solicitud</TableHead>
-                            <TableHead>Creado</TableHead>
+                            <TableHead class="cursor-pointer select-none hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors" @click="sortBy('requested_at')">
+                                Fecha Solicitud<span class="text-xs">{{ sortArrow('requested_at') }}</span>
+                            </TableHead>
+                            <TableHead class="cursor-pointer select-none hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors" @click="sortBy('updated_at')">
+                                Actualización<span class="text-xs">{{ sortArrow('updated_at') }}</span>
+                            </TableHead>
+                            <TableHead class="cursor-pointer select-none hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors" @click="sortBy('created_at')">
+                                Creado<span class="text-xs">{{ sortArrow('created_at') }}</span>
+                            </TableHead>
                             <TableHead class="text-right">Acciones</TableHead>
                         </TableRow>
                     </TableHeader>
                     <TableBody>
                         <TableRow v-if="tickets.data.length === 0">
-                            <TableCell colspan="9" class="text-center text-muted-foreground h-24">
+                            <TableCell colspan="10" class="text-center text-muted-foreground h-24">
                                 No hay solicitudes registradas aún.
                             </TableCell>
                         </TableRow>
@@ -130,8 +157,8 @@ const deleteTicket = (ticket) => {
                             <TableCell class="text-muted-foreground">{{ ticket.requester?.name || '—' }}</TableCell>
                             <TableCell class="text-muted-foreground">{{ ticket.assignee?.name || '—' }}</TableCell>
                             <TableCell class="text-muted-foreground text-sm">{{ formatDateOnly(ticket.requested_at) }}</TableCell>
-                            <TableCell class="text-muted-foreground text-sm">{{ new
-                                Date(ticket.created_at).toLocaleDateString('es-MX') }}</TableCell>
+                            <TableCell class="text-muted-foreground text-sm">{{ formatDateTime(ticket.updated_at) }}</TableCell>
+                            <TableCell class="text-muted-foreground text-sm">{{ formatDateTime(ticket.created_at) }}</TableCell>
                             <TableCell class="text-right space-x-3">
                                 <Link :href="route('admin.tickets.show', ticket.uuid)"
                                     class="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 font-medium transition-colors text-sm">

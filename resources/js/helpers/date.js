@@ -10,6 +10,17 @@ export function parseDateOnly(dateStr) {
     return new Date(+y, +m - 1, +d);
 }
 
+export function formatDateTime(dateStr) {
+    if (!dateStr) return '—';
+    return new Date(dateStr).toLocaleDateString('es-MX', {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+    });
+}
+
 export function isOverdue(task) {
     if (!task.due_date || task.status === 'done' || task.status === 'cancelled') return false;
     const [y, m, d] = task.due_date.split('-');

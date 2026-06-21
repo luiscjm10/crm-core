@@ -25,6 +25,11 @@ class TicketController extends Controller
     {
         $perPage = in_array($request->input('perPage'), [10, 20, 50, 100]) ? (int) $request->input('perPage') : 10;
 
+        $sort = in_array($request->input('sort'), ['status', 'requested_at', 'created_at', 'updated_at', 'ticket_type'])
+            ? $request->input('sort') : 'requested_at';
+        $direction = in_array($request->input('direction'), ['asc', 'desc'])
+            ? $request->input('direction') : 'desc';
+
         $user = $request->user();
         $query = Ticket::with('company', 'ticketType', 'creator', 'requester', 'assignee');
 
@@ -53,10 +58,24 @@ class TicketController extends Controller
             });
         }
 
-        $tickets = $query->latest()->paginate($perPage)->appends(['perPage' => $perPage]);
+        if ($sort === 'ticket_type') {
+            $query->leftJoin('ticket_types', 'tickets.ticket_type_id', '=', 'ticket_types.id')
+                ->select('tickets.*')
+                ->orderBy('ticket_types.name', $direction);
+        } else {
+            $query->orderBy('tickets.' . $sort, $direction);
+        }
+
+        $tickets = $query->paginate($perPage)->appends([
+            'perPage' => $perPage,
+            'sort' => $sort,
+            'direction' => $direction,
+        ]);
 
         return Inertia::render('Admin/Tickets/Index', [
             'tickets' => $tickets,
+            'sort' => $sort,
+            'direction' => $direction,
         ]);
     }
 
