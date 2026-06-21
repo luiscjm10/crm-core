@@ -14,7 +14,15 @@ class Comment extends Model
         'is_system',
         'commentable_id',
         'commentable_type',
+        'time_spent_minutes',
     ];
+
+    protected function casts(): array
+    {
+        return [
+            'time_spent_minutes' => 'integer',
+        ];
+    }
 
     public function commentable(): MorphTo
     {

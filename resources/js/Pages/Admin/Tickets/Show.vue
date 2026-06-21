@@ -10,18 +10,21 @@ const props = defineProps({
     ticket: Object,
     canClose: Boolean,
     canComment: Boolean,
+    canLogTime: Boolean,
+    canViewResolutionTime: Boolean,
 });
 
 const form = useForm({
     commentable_type: 'ticket',
     commentable_id: props.ticket.id,
     content: '',
+    time_spent_minutes: null,
 });
 
 const submitComment = () => {
     form.post(route('admin.comments.store'), {
         preserveScroll: true,
-        onSuccess: () => form.reset('content'),
+        onSuccess: () => form.reset('content', 'time_spent_minutes'),
     });
 };
 
@@ -137,6 +140,14 @@ const formatDate = (date) => {
                         <p class="text-sm font-medium text-gray-500 dark:text-zinc-500">Fecha de Solicitud</p>
                         <p class="text-base text-gray-900 dark:text-zinc-100 font-medium">{{ formatDateOnly(ticket.requested_at) }}</p>
                     </div>
+                    <div v-if="canViewResolutionTime && ticket.resolution_time_human" class="space-y-1">
+                        <p class="text-sm font-medium text-gray-500 dark:text-zinc-500">Tiempo de resolución</p>
+                        <p class="text-base text-gray-900 dark:text-zinc-100 font-medium">{{ ticket.resolution_time_human }}</p>
+                    </div>
+                    <div class="space-y-1">
+                        <p class="text-sm font-medium text-gray-500 dark:text-zinc-500">Tiempo Total Invertido</p>
+                        <p class="text-base text-gray-900 dark:text-zinc-100 font-medium">{{ ticket.total_time_spent_minutes }} min</p>
+                    </div>
                     <div class="space-y-1">
                         <p class="text-sm font-medium text-gray-500 dark:text-zinc-500">Creado por</p>
                         <p class="text-base text-gray-900 dark:text-zinc-100 font-medium">{{ ticket.creator?.name || '—' }}</p>
@@ -153,51 +164,83 @@ const formatDate = (date) => {
             </CardContent>
         </Card>
 
-        <div class="mt-8 space-y-6">
-            <h3 class="text-lg font-semibold text-gray-900 dark:text-zinc-100">Comentarios</h3>
+        <div class="mt-8">
+            <h3 class="text-lg font-semibold text-gray-900 dark:text-zinc-100 mb-6">Comentarios</h3>
 
-            <div v-if="ticket.comments?.length" class="space-y-4">
-                <div v-for="comment in ticket.comments" :key="comment.id">
-                    <div v-if="comment.is_system"
-                        class="text-center text-xs text-gray-400 dark:text-zinc-500 py-3">
-                        {{ comment.content }}
-                    </div>
-                    <div v-else
-                        class="bg-white dark:bg-zinc-900/50 border border-gray-200 dark:border-zinc-800 rounded-lg p-4 shadow-sm">
-                        <div class="flex items-center justify-between mb-2">
-                            <span class="text-sm font-medium text-gray-900 dark:text-zinc-100">
-                                {{ comment.user?.name || 'Usuario' }}
-                            </span>
-                            <span class="text-xs text-gray-400 dark:text-zinc-500">
-                                {{ formatDate(comment.created_at) }}
-                            </span>
+            <div class="relative">
+                <div class="absolute left-[19px] top-0 bottom-0 w-px bg-zinc-200 dark:bg-zinc-700"></div>
+
+                <div class="space-y-6">
+                    <div v-for="comment in ticket.comments" :key="comment.id" class="relative pl-10">
+                        <div class="absolute left-[13px] top-1.5 w-3 h-3 rounded-full border-2 bg-white dark:bg-zinc-900 z-10 ring-2 ring-white dark:ring-zinc-950"
+                            :class="comment.is_system ? 'border-zinc-300 dark:border-zinc-600' : 'border-emerald-500'">
                         </div>
-                        <p class="text-sm text-gray-700 dark:text-zinc-300 whitespace-pre-wrap">{{ comment.content }}</p>
+                        <div v-if="comment.is_system"
+                            class="text-xs text-zinc-400 dark:text-zinc-500 text-center py-2 select-none">
+                            {{ comment.content }}
+                        </div>
+                        <div v-else
+                            class="rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900/50 p-4 shadow-sm">
+                            <div class="flex items-center justify-between mb-2">
+                                <span class="text-sm font-medium text-zinc-900 dark:text-zinc-100">
+                                    {{ comment.user?.name || 'Usuario' }}
+                                </span>
+                                <div class="flex items-center gap-2">
+                                    <span v-if="comment.time_spent_minutes > 0"
+                                        class="inline-flex items-center gap-1 text-xs text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/50 px-2 py-0.5 rounded-full">
+                                        ⏱️ {{ comment.time_spent_minutes }} min
+                                    </span>
+                                    <span class="text-xs text-zinc-400 dark:text-zinc-500">
+                                        {{ formatDate(comment.created_at) }}
+                                    </span>
+                                </div>
+                            </div>
+                            <p class="text-sm text-zinc-700 dark:text-zinc-300 whitespace-pre-wrap">{{ comment.content }}</p>
+                        </div>
+                    </div>
+
+                    <div v-if="!isTicketClosed && canComment" class="relative pl-10">
+                        <div class="absolute left-[13px] top-1.5 w-3 h-3 rounded-full border-2 border-dashed border-emerald-400 dark:border-emerald-600 bg-white dark:bg-zinc-900 z-10 ring-2 ring-white dark:ring-zinc-950">
+                        </div>
+                        <div class="rounded-lg border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900/80 p-4 shadow-sm">
+                            <form @submit.prevent="submitComment">
+                                <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-2" for="comment-content">
+                                    Agregar comentario
+                                </label>
+                                <textarea id="comment-content" v-model="form.content"
+                                    class="w-full rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 px-3 py-2 text-sm text-zinc-900 dark:text-zinc-100 placeholder-zinc-400 dark:placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-emerald-500 dark:focus:ring-emerald-400 focus:border-transparent resize-none"
+                                    rows="3" placeholder="Escribe tu comentario..." :disabled="form.processing"></textarea>
+                                <div v-if="form.errors.content" class="mt-1 text-sm text-red-500">{{ form.errors.content }}</div>
+                                <div v-if="canLogTime" class="mt-3">
+                                    <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1" for="time_spent_minutes">
+                                        Tiempo invertido (minutos)
+                                    </label>
+                                    <input id="time_spent_minutes" type="number" v-model="form.time_spent_minutes" min="1"
+                                        class="flex w-40 rounded-md border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 px-3 py-2 text-sm text-zinc-900 dark:text-zinc-100 placeholder-zinc-400 dark:placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-emerald-500 dark:focus:ring-emerald-400"
+                                        placeholder="0" :disabled="form.processing" />
+                                    <div v-if="form.errors.time_spent_minutes" class="mt-1 text-sm text-red-500">{{ form.errors.time_spent_minutes }}</div>
+                                </div>
+                                <div class="mt-3 flex justify-end">
+                                    <Button type="submit" :disabled="form.processing || !form.content.trim()"
+                                        class="bg-emerald-600 text-white hover:bg-emerald-700 dark:bg-emerald-600 dark:hover:bg-emerald-500 text-sm">
+                                        Enviar
+                                    </Button>
+                                </div>
+                            </form>
+                        </div>
                     </div>
                 </div>
             </div>
-            <p v-else class="text-sm text-gray-400 dark:text-zinc-500 italic">
+
+            <p v-if="!ticket.comments?.length && isTicketClosed" class="text-sm text-zinc-400 dark:text-zinc-500 italic">
+                No hay comentarios.
+            </p>
+            <p v-if="!ticket.comments?.length && !isTicketClosed && !canComment" class="text-sm text-zinc-400 dark:text-zinc-500 italic">
                 No hay comentarios aún.
             </p>
-
-            <div v-if="!isTicketClosed && canComment"
-                class="bg-white dark:bg-zinc-900/50 border border-gray-200 dark:border-zinc-800 rounded-lg p-4 shadow-sm">
-                <form @submit.prevent="submitComment">
-                    <label class="block text-sm font-medium text-gray-700 dark:text-zinc-300 mb-2" for="comment-content">
-                        Agregar comentario
-                    </label>
-                    <textarea id="comment-content" v-model="form.content"
-                        class="w-full rounded-lg border border-gray-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 px-3 py-2 text-sm text-gray-900 dark:text-zinc-100 placeholder-gray-400 dark:placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-emerald-500 dark:focus:ring-emerald-400 focus:border-transparent resize-none"
-                        rows="3" placeholder="Escribe tu comentario..." :disabled="form.processing"></textarea>
-                    <div v-if="form.errors.content" class="mt-1 text-sm text-red-500">{{ form.errors.content }}</div>
-                    <div class="mt-3 flex justify-end">
-                        <Button type="submit" :disabled="form.processing || !form.content.trim()"
-                            class="bg-emerald-600 text-white hover:bg-emerald-700 dark:bg-emerald-600 dark:hover:bg-emerald-500 text-sm">
-                            Enviar
-                        </Button>
-                    </div>
-                </form>
-            </div>
+            <p v-if="!ticket.comments?.length && !isTicketClosed && canComment" class="text-sm text-zinc-400 dark:text-zinc-500 italic mt-4">
+                No hay comentarios aún. Sé el primero en responder.
+            </p>
         </div>
     </AuthenticatedLayout>
 </template>

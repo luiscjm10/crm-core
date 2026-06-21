@@ -45,6 +45,8 @@ class RoleAndAdminSeeder extends Seeder
             ['name' => 'tickets.close', 'description' => 'Cerrar tickets del sistema', 'group' => 5],
             ['name' => 'tickets.comment', 'description' => 'Comentar en tickets del sistema', 'group' => 5],
             ['name' => 'tickets.set-requested-at', 'description' => 'Asignar fecha de solicitud al crear ticket', 'group' => 5],
+            ['name' => 'tickets.log-time', 'description' => 'Registrar tiempo en comentarios de tickets', 'group' => 5],
+            ['name' => 'tickets.view-resolution-time', 'description' => 'Ver tiempos de resolución e invertido en tickets', 'group' => 5],
         ];
 
         $permissionNames = [];

@@ -20,6 +20,7 @@ class CommentController extends Controller
             'commentable_type' => 'required|string|in:ticket',
             'commentable_id' => 'required|integer',
             'content' => 'required|string|max:5000',
+            'time_spent_minutes' => 'nullable|integer|min:1',
         ]);
 
         $modelClass = match ($validated['commentable_type']) {
@@ -32,7 +33,16 @@ class CommentController extends Controller
             abort(403, 'No tienes permiso para comentar en este recurso.');
         }
 
-        $addComment->execute($model, $request->user(), $validated['content']);
+        $timeSpentMinutes = $request->user()->can('tickets.log-time')
+            ? ($validated['time_spent_minutes'] ?? null)
+            : null;
+
+        $addComment->execute(
+            $model,
+            $request->user(),
+            $validated['content'],
+            timeSpentMinutes: $timeSpentMinutes
+        );
 
         return redirect()->back();
     }

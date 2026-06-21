@@ -23,13 +23,38 @@ class Ticket extends Model
         'status',
         'description',
         'requested_at',
+        'closed_at',
+    ];
+
+    protected $appends = [
+        'total_time_spent_minutes',
+        'resolution_time_human',
     ];
 
     protected function casts(): array
     {
         return [
             'requested_at' => 'date:Y-m-d',
+            'closed_at' => 'datetime',
         ];
+    }
+
+    public function getTotalTimeSpentMinutesAttribute(): int
+    {
+        if (array_key_exists('comments_sum_time_spent_minutes', $this->attributes)) {
+            return (int) $this->attributes['comments_sum_time_spent_minutes'];
+        }
+
+        return (int) $this->comments->sum('time_spent_minutes');
+    }
+
+    public function getResolutionTimeHumanAttribute(): ?string
+    {
+        if (! $this->closed_at) {
+            return null;
+        }
+
+        return $this->created_at->diffForHumans($this->closed_at, true);
     }
 
     public function getRouteKeyName(): string

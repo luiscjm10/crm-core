@@ -31,7 +31,8 @@ class TicketController extends Controller
             ? $request->input('direction') : 'desc';
 
         $user = $request->user();
-        $query = Ticket::with('company', 'ticketType', 'creator', 'requester', 'assignee');
+        $query = Ticket::with('company', 'ticketType', 'creator', 'requester', 'assignee')
+            ->withSum('comments', 'time_spent_minutes');
 
         if ($user->hasRole('super-admin')) {
             // Nivel 1: todo el sistema, sin filtro
@@ -137,7 +138,10 @@ class TicketController extends Controller
 
     public function show(Request $request, Ticket $ticket)
     {
-        $ticket->load('company', 'ticketType', 'creator', 'requester', 'assignee', 'comments.user');
+        $ticket->load([
+            'company', 'ticketType', 'creator', 'requester', 'assignee',
+            'comments' => fn($q) => $q->reorder()->oldest()->with('user'),
+        ]);
 
         $user = $request->user();
         $canClose = $ticket->status !== 'closed'
@@ -152,10 +156,15 @@ class TicketController extends Controller
                 || $user->id === $ticket->requester_id
                 || $user->can('tickets.comment'));
 
+        $canLogTime = $user->can('tickets.log-time');
+        $canViewResolutionTime = $user->can('tickets.view-resolution-time');
+
         return Inertia::render('Admin/Tickets/Show', [
             'ticket' => $ticket,
             'canClose' => $canClose,
             'canComment' => $canComment,
+            'canLogTime' => $canLogTime,
+            'canViewResolutionTime' => $canViewResolutionTime,
         ]);
     }
 

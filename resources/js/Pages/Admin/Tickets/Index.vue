@@ -24,6 +24,9 @@ const canCreateTicket = computed(() =>
 const canDeleteTicket = computed(() =>
     usePage().props.auth.permissions?.includes('tickets.delete')
 );
+const canViewResolutionTime = computed(() =>
+    usePage().props.auth.permissions?.includes('tickets.view-resolution-time')
+);
 
 const statusLabels = {
     open: 'Abierto',
@@ -134,12 +137,14 @@ const deleteTicket = (ticket) => {
                             <TableHead class="cursor-pointer select-none hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors" @click="sortBy('created_at')">
                                 Creado<span class="text-xs">{{ sortArrow('created_at') }}</span>
                             </TableHead>
+                            <TableHead v-if="canViewResolutionTime">Tiempo Resolución</TableHead>
+                            <TableHead>Tiempo Invertido</TableHead>
                             <TableHead class="text-right">Acciones</TableHead>
                         </TableRow>
                     </TableHeader>
                     <TableBody>
                         <TableRow v-if="tickets.data.length === 0">
-                            <TableCell colspan="10" class="text-center text-muted-foreground h-24">
+                            <TableCell :colspan="canViewResolutionTime ? 12 : 11" class="text-center text-muted-foreground h-24">
                                 No hay solicitudes registradas aún.
                             </TableCell>
                         </TableRow>
@@ -159,6 +164,8 @@ const deleteTicket = (ticket) => {
                             <TableCell class="text-muted-foreground text-sm">{{ formatDateOnly(ticket.requested_at) }}</TableCell>
                             <TableCell class="text-muted-foreground text-sm">{{ formatDateTime(ticket.updated_at) }}</TableCell>
                             <TableCell class="text-muted-foreground text-sm">{{ formatDateTime(ticket.created_at) }}</TableCell>
+                            <TableCell v-if="canViewResolutionTime" class="text-muted-foreground text-sm">{{ ticket.resolution_time_human || '—' }}</TableCell>
+                            <TableCell class="text-muted-foreground text-sm">{{ ticket.comments_sum_time_spent_minutes ?? 0 }} min</TableCell>
                             <TableCell class="text-right space-x-3">
                                 <Link :href="route('admin.tickets.show', ticket.uuid)"
                                     class="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 font-medium transition-colors text-sm">
