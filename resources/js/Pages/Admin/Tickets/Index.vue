@@ -125,6 +125,7 @@ const deleteTicket = (ticket) => {
                                 @click="sortBy('ticket_type')">
                                 Tipo<span class="text-xs">{{ sortArrow('ticket_type') }}</span>
                             </TableHead>
+                            <TableHead>Descripción</TableHead>
                             <TableHead
                                 class="cursor-pointer select-none hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors"
                                 @click="sortBy('status')">
@@ -153,8 +154,8 @@ const deleteTicket = (ticket) => {
                         </TableRow>
                     </TableHeader>
                     <TableBody>
-                        <TableRow v-if="tickets.data.length === 0">
-                            <TableCell :colspan="canViewResolutionTime ? 12 : 11"
+                            <TableRow v-if="tickets.data.length === 0">
+                            <TableCell :colspan="canViewResolutionTime ? 13 : 12"
                                 class="text-center text-muted-foreground h-24">
                                 No hay solicitudes registradas aún.
                             </TableCell>
@@ -168,6 +169,7 @@ const deleteTicket = (ticket) => {
                             <TableCell class="text-muted-foreground break-words whitespace-normal">{{
                                 ticket.ticket_type?.name
                                 || '—' }}</TableCell>
+                            <TableCell class="truncate max-w-[200px] text-muted-foreground" :title="ticket.description">{{ ticket.description || '—' }}</TableCell>
                             <TableCell>
                                 <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium"
                                     :class="statusColors[ticket.status] || 'bg-zinc-100 text-zinc-800 dark:bg-zinc-800 dark:text-zinc-300'">
