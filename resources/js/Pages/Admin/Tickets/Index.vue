@@ -2,8 +2,8 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import { Head, Link, router, usePage } from '@inertiajs/vue3';
 import Swal from 'sweetalert2';
-import { ref, computed } from 'vue';
-import { useDark } from '@vueuse/core';
+import { ref, computed, watch } from 'vue';
+import { useDark, useDebounceFn } from '@vueuse/core';
 import { formatDateOnly, formatDateTime, formatMinutes } from '@/helpers/date';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -13,7 +13,22 @@ const props = defineProps({
     tickets: Object,
     sort: { type: String, default: 'requested_at' },
     direction: { type: String, default: 'desc' },
+    filters: { type: Object, default: () => ({}) },
+    ticketTypes: { type: Array, default: () => [] },
 });
+
+const today = new Date();
+const firstOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+const lastOfMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+
+const pad = (n) => String(n).padStart(2, '0');
+const formatDateInput = (d) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+
+const search = ref(props.filters?.search ?? '');
+const status = ref(props.filters?.status ?? '');
+const ticketTypeId = ref(props.filters?.ticket_type_id ?? '');
+const dateFrom = ref(props.filters?.date_from ?? formatDateInput(firstOfMonth));
+const dateTo = ref(props.filters?.date_to ?? formatDateInput(lastOfMonth));
 
 const perPage = ref(props.tickets?.per_page ?? 10);
 const isDark = useDark();
@@ -42,17 +57,34 @@ const statusColors = {
     closed: 'bg-zinc-100 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400',
 };
 
+const applyFilters = (overrides = {}) => {
+    router.get(route('admin.tickets.index'), {
+        ...route().params,
+        search: search.value || undefined,
+        status: status.value || undefined,
+        ticket_type_id: ticketTypeId.value || undefined,
+        date_from: dateFrom.value || undefined,
+        date_to: dateTo.value || undefined,
+        perPage: perPage.value,
+        ...overrides,
+    }, { preserveState: true, replace: true });
+};
+
+const debouncedSearch = useDebounceFn(() => {
+    applyFilters();
+}, 300);
+
+watch(search, () => {
+    debouncedSearch();
+});
+
 const changePerPage = () => {
-    router.get(route('admin.tickets.index'), { ...route().params, perPage: perPage.value }, { preserveState: true, replace: true });
+    applyFilters();
 };
 
 const sortBy = (column) => {
     const newDirection = props.sort === column && props.direction === 'asc' ? 'desc' : 'asc';
-    router.get(route('admin.tickets.index'), {
-        ...route().params,
-        sort: column,
-        direction: newDirection,
-    }, { preserveState: true, replace: true });
+    applyFilters({ sort: column, direction: newDirection });
 };
 
 const sortArrow = (column) => {
@@ -115,6 +147,42 @@ const deleteTicket = (ticket) => {
                 <CardDescription>Gestiona las solicitudes de soporte del sistema.</CardDescription>
             </CardHeader>
             <CardContent>
+                <div class="flex flex-wrap gap-3 mb-6 items-end">
+                    <div class="flex-1 min-w-[180px]">
+                        <label for="search" class="block text-xs font-medium text-gray-500 dark:text-zinc-400 mb-1">Buscar</label>
+                        <input id="search" v-model="search" type="text" placeholder="UUID o descripción..."
+                            class="w-full rounded-md border border-gray-300 dark:border-zinc-800 bg-white dark:bg-zinc-950 px-3 py-2 text-sm text-gray-900 dark:text-zinc-100 placeholder-gray-400 dark:placeholder-zinc-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500" />
+                    </div>
+                    <div class="min-w-[140px]">
+                        <label for="status" class="block text-xs font-medium text-gray-500 dark:text-zinc-400 mb-1">Estado</label>
+                        <select id="status" v-model="status" @change="applyFilters()"
+                            class="w-full rounded-md border border-gray-300 dark:border-zinc-800 bg-white dark:bg-zinc-950 px-3 py-2 text-sm text-gray-900 dark:text-zinc-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500">
+                            <option value="">Todos</option>
+                            <option value="open">Abierto</option>
+                            <option value="in_progress">En progreso</option>
+                            <option value="resolved">Resuelto</option>
+                            <option value="closed">Cerrado</option>
+                        </select>
+                    </div>
+                    <div class="min-w-[140px]">
+                        <label for="ticket_type_id" class="block text-xs font-medium text-gray-500 dark:text-zinc-400 mb-1">Tipo</label>
+                        <select id="ticket_type_id" v-model="ticketTypeId" @change="applyFilters()"
+                            class="w-full rounded-md border border-gray-300 dark:border-zinc-800 bg-white dark:bg-zinc-950 px-3 py-2 text-sm text-gray-900 dark:text-zinc-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500">
+                            <option value="">Todos</option>
+                            <option v-for="tt in ticketTypes" :key="tt.id" :value="tt.id">{{ tt.name }}</option>
+                        </select>
+                    </div>
+                    <div class="min-w-[140px]">
+                        <label for="date_from" class="block text-xs font-medium text-gray-500 dark:text-zinc-400 mb-1">Desde</label>
+                        <input id="date_from" v-model="dateFrom" type="date" @change="applyFilters()"
+                            class="w-full rounded-md border border-gray-300 dark:border-zinc-800 bg-white dark:bg-zinc-950 px-3 py-2 text-sm text-gray-900 dark:text-zinc-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500" />
+                    </div>
+                    <div class="min-w-[140px]">
+                        <label for="date_to" class="block text-xs font-medium text-gray-500 dark:text-zinc-400 mb-1">Hasta</label>
+                        <input id="date_to" v-model="dateTo" type="date" @change="applyFilters()"
+                            class="w-full rounded-md border border-gray-300 dark:border-zinc-800 bg-white dark:bg-zinc-950 px-3 py-2 text-sm text-gray-900 dark:text-zinc-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500" />
+                    </div>
+                </div>
                 <Table>
                     <TableHeader>
                         <TableRow>

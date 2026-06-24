@@ -8,6 +8,7 @@ use App\Domains\Tickets\Actions\AssignTicketAction;
 use App\Domains\Tickets\Actions\UpdateTicketStatusAction;
 use App\Domains\Clients\Company;
 use App\Domains\Tickets\Ticket;
+use App\Domains\Tickets\TicketType;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -29,6 +30,14 @@ class TicketController extends Controller
             ? $request->input('sort') : 'requested_at';
         $direction = in_array($request->input('direction'), ['asc', 'desc'])
             ? $request->input('direction') : 'desc';
+
+        $filters = [
+            'search' => $request->get('search'),
+            'status' => $request->get('status'),
+            'ticket_type_id' => $request->get('ticket_type_id'),
+            'date_from' => $request->get('date_from', now()->startOfMonth()->format('Y-m-d')),
+            'date_to' => $request->get('date_to', now()->endOfMonth()->format('Y-m-d')),
+        ];
 
         $user = $request->user();
         $query = Ticket::with('company', 'ticketType', 'creator', 'requester', 'assignee')
@@ -59,6 +68,26 @@ class TicketController extends Controller
             });
         }
 
+        if ($search = $filters['search']) {
+            $query->where(function ($q) use ($search) {
+                $q->where('description', 'like', "%{$search}%")
+                  ->orWhere('uuid', 'like', "%{$search}%");
+            });
+        }
+
+        if ($status = $filters['status']) {
+            $query->where('status', $status);
+        }
+
+        if ($ticketTypeId = $filters['ticket_type_id']) {
+            $query->where('ticket_type_id', $ticketTypeId);
+        }
+
+        $query->whereBetween('requested_at', [
+            $filters['date_from'] . ' 00:00:00',
+            $filters['date_to'] . ' 23:59:59',
+        ]);
+
         if ($sort === 'ticket_type') {
             $query->leftJoin('ticket_types', 'tickets.ticket_type_id', '=', 'ticket_types.id')
                 ->select('tickets.*')
@@ -71,12 +100,19 @@ class TicketController extends Controller
             'perPage' => $perPage,
             'sort' => $sort,
             'direction' => $direction,
+            'search' => $filters['search'],
+            'status' => $filters['status'],
+            'ticket_type_id' => $filters['ticket_type_id'],
+            'date_from' => $filters['date_from'],
+            'date_to' => $filters['date_to'],
         ]);
 
         return Inertia::render('Admin/Tickets/Index', [
             'tickets' => $tickets,
             'sort' => $sort,
             'direction' => $direction,
+            'filters' => $filters,
+            'ticketTypes' => TicketType::where('is_active', true)->get(['id', 'name']),
         ]);
     }
 
