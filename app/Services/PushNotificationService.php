@@ -36,8 +36,8 @@ class PushNotificationService
         $payload = json_encode([
             'title' => $title,
             'body' => $body,
-            'icon' => '/favicon.ico',
-            'badge' => '/favicon.ico',
+            'icon' => '/notification-icon.png',
+            'badge' => '/notification-badge.png',
             'data' => $data,
             'tag' => $data['tag'] ?? null,
             'renotify' => true,
