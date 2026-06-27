@@ -1,8 +1,9 @@
 [phases.setup]
-nixPkgs = ["php84", "php84Packages.composer", "nginx", "nodejs_22", "supervisor"]
+nixPkgs = ["php84", "php84Packages.composer", "nginx", "nodejs_22"]
 
 [phases.install]
 cmds = [
+  "apt-get update && apt-get install -y supervisor",
   "mkdir -p /var/log/nginx /var/cache/nginx /var/log/supervisor",
   "composer install --no-dev --optimize-autoloader --ignore-platform-reqs",
   "npm ci"
