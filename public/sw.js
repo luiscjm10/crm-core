@@ -5,8 +5,8 @@ self.addEventListener('push', function (event) {
         const data = event.data.json();
         const options = {
             body: data.body || '',
-            icon: data.icon || '/favicon.ico',
-            badge: data.badge || '/favicon.ico',
+            icon: data.icon || '/notification-icon.png',
+            badge: data.badge || '/notification-badge.png',
             data: data.data || {},
             tag: data.tag || 'default',
             renotify: true,
