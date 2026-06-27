@@ -1,9 +1,9 @@
 [phases.setup]
-nixPkgs = ["php84", "php84Packages.composer", "nginx", "nodejs_22"]
+nixPkgs = ["php84", "php84Packages.composer", "nginx", "nodejs_22", "supervisor"]
 
 [phases.install]
 cmds = [
-  "mkdir -p /var/log/nginx && mkdir -p /var/cache/nginx",
+  "mkdir -p /var/log/nginx /var/cache/nginx /var/log/supervisor",
   "composer install --no-dev --optimize-autoloader --ignore-platform-reqs",
   "npm ci"
 ]
@@ -12,4 +12,4 @@ cmds = [
 cmds = ["npm run build"]
 
 [start]
-cmd = "php artisan migrate --force && node /assets/scripts/prestart.mjs /assets/nginx.template.conf /nginx.conf && (php-fpm -y /assets/php-fpm.conf & nginx -c /nginx.conf)"
+cmd = """php artisan migrate --force && php artisan optimize && node /assets/scripts/prestart.mjs /assets/nginx.template.conf /nginx.conf && cp /app/supervisord.conf /etc/supervisor/conf.d/laravel.conf && supervisord -c /etc/supervisor/conf.d/laravel.conf"""

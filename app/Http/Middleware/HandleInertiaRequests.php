@@ -38,6 +38,7 @@ class HandleInertiaRequests extends Middleware
                 'permissions' => $request->user()?->getAllPermissions()->pluck('name') ?? [],
             ],
             'companies' => $companies,
+            'vapidPublicKey' => config('vapid.public_key'),
         ];
     }
 }

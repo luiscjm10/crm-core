@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Domains\Notifications\Events\TicketCommented;
 use App\Domains\Shared\Actions\AddCommentAction;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Model;
@@ -37,12 +38,16 @@ class CommentController extends Controller
             ? ($validated['time_spent_minutes'] ?? null)
             : null;
 
-        $addComment->execute(
+        $comment = $addComment->execute(
             $model,
             $request->user(),
             $validated['content'],
             timeSpentMinutes: $timeSpentMinutes
         );
+
+        if ($model instanceof \App\Domains\Tickets\Ticket) {
+            event(new TicketCommented($model, $request->user(), $comment));
+        }
 
         return redirect()->back();
     }

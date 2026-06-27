@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Domains\Notifications\Events\TicketClosed;
+use App\Domains\Notifications\Events\TicketCreated;
 use App\Domains\Tickets\Actions\CloseTicketAction;
 use App\Domains\Tickets\Actions\CreateTicketAction;
 use App\Domains\Tickets\Actions\AssignTicketAction;
@@ -169,6 +171,8 @@ class TicketController extends Controller
             requesterId: $requesterId
         );
 
+        event(new TicketCreated($ticket, $request->user()));
+
         return redirect()->route('admin.tickets.show', $ticket);
     }
 
@@ -216,6 +220,8 @@ class TicketController extends Controller
         abort_unless($canClose, 403, 'No tienes permiso para cerrar este ticket.');
 
         $closeTicket->execute($ticket, $user);
+
+        event(new TicketClosed($ticket, $user));
 
         return redirect()->back()->with('success', 'Ticket cerrado correctamente.');
     }

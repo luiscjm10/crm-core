@@ -1,5 +1,7 @@
 <?php
 
+use App\Http\Controllers\Api\NotificationController;
+use App\Http\Controllers\Api\PushSubscriptionController;
 use App\Http\Controllers\CompanyController;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
@@ -26,6 +28,14 @@ Route::middleware('auth')->group(function () {
             $company->users()->select('id', 'name', 'last_name')->get()
         );
     })->name('api.companies.users');
+
+    Route::prefix('api')->group(function () {
+        Route::post('push/subscribe', [PushSubscriptionController::class, 'subscribe'])->name('api.push.subscribe');
+        Route::delete('push/unsubscribe', [PushSubscriptionController::class, 'unsubscribe'])->name('api.push.unsubscribe');
+        Route::get('notifications', [NotificationController::class, 'index'])->name('api.notifications.index');
+        Route::post('notifications/{id}/read', [NotificationController::class, 'markAsRead'])->name('api.notifications.read');
+        Route::post('notifications/read-all', [NotificationController::class, 'markAllAsRead'])->name('api.notifications.read-all');
+    });
 
     Route::prefix('admin')->name('admin.')->group(function () {
         Route::resource('users', \App\Http\Controllers\Admin\UserController::class);

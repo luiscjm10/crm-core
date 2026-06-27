@@ -1,9 +1,12 @@
 <script setup>
-import { ref, computed } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 import ApplicationLogo from '@/Components/ApplicationLogo.vue';
 import Dropdown from '@/Components/Dropdown.vue';
 import DropdownLink from '@/Components/DropdownLink.vue';
 import { Link, usePage } from '@inertiajs/vue3';
+
+import NotificationBell from '@/Components/NotificationBell.vue';
+import { usePushNotifications } from '@/Composables/usePushNotifications.js';
 
 // 1. Importamos la lógica de VueUse y los iconos de Lucide
 import { useDark, useToggle, useMediaQuery } from '@vueuse/core';
@@ -27,6 +30,15 @@ const isAdminOpen = ref(isOnAdminRoute.value);
 
 const isLargeScreen = useMediaQuery('(min-width: 1024px)');
 const isMobileOpen = ref(false);
+
+const { init, isSupported, isSubscribed, permissionState, requestPermission } = usePushNotifications();
+const showBanner = computed(() => isSupported.value && !isSubscribed.value && permissionState.value !== 'denied');
+
+onMounted(() => {
+    if ('serviceWorker' in navigator && 'PushManager' in window && page.props.vapidPublicKey) {
+        init(page.props.vapidPublicKey);
+    }
+});
 </script>
 
 <template>
@@ -153,6 +165,8 @@ const isMobileOpen = ref(false);
                         <Moon v-else class="w-5 h-5" />
                     </button>
 
+                    <NotificationBell />
+
                     <Dropdown align="right" width="48">
                         <template #trigger>
                             <span class="inline-flex rounded-md">
@@ -176,6 +190,24 @@ const isMobileOpen = ref(false);
                     </Dropdown>
                 </div>
             </header>
+
+            <div v-if="showBanner"
+                class="flex items-center justify-between gap-4 px-6 py-2.5 bg-amber-50 dark:bg-amber-900/20 border-b border-amber-200 dark:border-amber-800/30">
+                <div class="flex items-center gap-3">
+                    <svg class="w-5 h-5 text-amber-500 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+                    </svg>
+                    <p class="text-sm text-amber-800 dark:text-amber-300">
+                        <span class="font-medium">Activa las notificaciones</span>
+                        <span class="text-amber-600 dark:text-amber-400 ml-1">para recibir alertas de tickets en tiempo real.</span>
+                    </p>
+                </div>
+                <button @click="requestPermission"
+                    class="flex-shrink-0 text-xs font-semibold text-white bg-amber-500 hover:bg-amber-600 px-4 py-1.5 rounded-lg transition-colors">
+                    Activar
+                </button>
+            </div>
 
             <main
                 class="flex-1 overflow-x-hidden overflow-y-auto bg-gray-50 dark:bg-zinc-950 p-6 md:p-8 transition-colors duration-300">
