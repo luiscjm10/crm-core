@@ -148,7 +148,7 @@ const selectedRequesterName = computed(() => {
 
                             <div class="space-y-2">
                                 <Label for="description">Descripción <span class="text-red-500">*</span></Label>
-                                <textarea id="description" v-model="form.description" rows="6" required
+                                <textarea id="description" v-model="form.description" rows="6" required spellcheck="true" lang="es-ES"
                                     class="flex w-full rounded-md border border-gray-300 dark:border-zinc-800 bg-white dark:bg-zinc-950 px-3 py-2 text-sm text-gray-900 dark:text-zinc-100 placeholder-gray-400 dark:placeholder-zinc-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 resize-y"></textarea>
                                 <p class="text-sm text-red-500" v-if="form.errors.description">{{ form.errors.description }}</p>
                             </div>

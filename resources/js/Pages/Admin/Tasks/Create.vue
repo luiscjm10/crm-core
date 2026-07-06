@@ -97,7 +97,7 @@ const submit = () => {
 
                         <div class="space-y-2 md:col-span-2">
                             <Label for="description">Descripción</Label>
-                            <textarea id="description" v-model="form.description"
+                            <textarea id="description" v-model="form.description" spellcheck="true" lang="es-ES"
                                 class="flex w-full rounded-md border border-gray-300 dark:border-zinc-800 bg-white dark:bg-zinc-950 px-3 py-2 text-sm text-gray-900 dark:text-zinc-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 min-h-[100px]"
                                 placeholder="Descripción detallada (opcional)"></textarea>
                             <p class="text-sm text-red-500" v-if="form.errors.description">{{ form.errors.description }}</p>

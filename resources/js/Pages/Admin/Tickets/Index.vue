@@ -167,7 +167,7 @@ const deleteTicket = (ticket) => {
                 <div class="flex flex-wrap gap-3 mb-6 items-end">
                     <div class="flex-1 min-w-[180px]">
                         <label for="search" class="block text-xs font-medium text-gray-500 dark:text-zinc-400 mb-1">Buscar</label>
-                        <input id="search" v-model="search" type="text" placeholder="UUID o descripción..."
+                        <input id="search" v-model="search" type="text" placeholder="UUID o descripción..." spellcheck="true" lang="es-ES"
                             class="w-full rounded-md border border-gray-300 dark:border-zinc-800 bg-white dark:bg-zinc-950 px-3 py-2 text-sm text-gray-900 dark:text-zinc-100 placeholder-gray-400 dark:placeholder-zinc-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500" />
                     </div>
                     <div class="min-w-[140px]">

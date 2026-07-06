@@ -207,7 +207,7 @@ const formatDate = (date) => {
                                 <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-2" for="comment-content">
                                     Agregar comentario
                                 </label>
-                                <textarea id="comment-content" v-model="form.content"
+                                <textarea id="comment-content" v-model="form.content" spellcheck="true" lang="es-ES"
                                     class="w-full rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 px-3 py-2 text-sm text-zinc-900 dark:text-zinc-100 placeholder-zinc-400 dark:placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-emerald-500 dark:focus:ring-emerald-400 focus:border-transparent resize-none"
                                     rows="3" placeholder="Escribe tu comentario..." :disabled="form.processing"></textarea>
                                 <div v-if="form.errors.content" class="mt-1 text-sm text-red-500">{{ form.errors.content }}</div>
