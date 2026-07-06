@@ -9,6 +9,7 @@ use App\Domains\Tickets\Actions\CreateTicketAction;
 use App\Domains\Tickets\Actions\AssignTicketAction;
 use App\Domains\Tickets\Actions\UpdateTicketStatusAction;
 use App\Domains\Clients\Company;
+use App\Domains\Tickets\Actions\ExportTicketsAction;
 use App\Domains\Tickets\Ticket;
 use App\Domains\Tickets\TicketType;
 use App\Http\Controllers\Controller;
@@ -19,7 +20,7 @@ class TicketController extends Controller
 {
     public function __construct()
     {
-        $this->middleware('permission:tickets.read')->only('index', 'show');
+        $this->middleware('permission:tickets.read')->only('index', 'show', 'export');
         $this->middleware('permission:tickets.create')->only('create', 'store');
         $this->middleware('permission:tickets.delete')->only('destroy');
     }
@@ -224,6 +225,11 @@ class TicketController extends Controller
         event(new TicketClosed($ticket, $user));
 
         return redirect()->back()->with('success', 'Ticket cerrado correctamente.');
+    }
+
+    public function export(Request $request, ExportTicketsAction $exportTickets)
+    {
+        return $exportTickets->execute($request);
     }
 
     public function destroy(Ticket $ticket)

@@ -51,6 +51,7 @@ Route::middleware('auth')->group(function () {
 
     Route::prefix('admin')->name('admin.tickets.')->group(function () {
         Route::get('tickets', [\App\Http\Controllers\Admin\TicketController::class, 'index'])->name('index');
+        Route::get('tickets/export', [\App\Http\Controllers\Admin\TicketController::class, 'export'])->name('export');
         Route::get('tickets/create', [\App\Http\Controllers\Admin\TicketController::class, 'create'])->name('create');
         Route::post('tickets', [\App\Http\Controllers\Admin\TicketController::class, 'store'])->name('store');
         Route::get('tickets/{ticket}', [\App\Http\Controllers\Admin\TicketController::class, 'show'])->name('show');

@@ -36,6 +36,16 @@ const isDark = useDark();
 const canCreateTicket = computed(() =>
     usePage().props.auth.permissions?.includes('tickets.create')
 );
+
+const exportUrl = computed(() => {
+    const params = new URLSearchParams();
+    if (search.value) params.set('search', search.value);
+    if (status.value) params.set('status', status.value);
+    if (ticketTypeId.value) params.set('ticket_type_id', ticketTypeId.value);
+    if (dateFrom.value) params.set('date_from', dateFrom.value);
+    if (dateTo.value) params.set('date_to', dateTo.value);
+    return route('admin.tickets.export') + '?' + params.toString();
+});
 const canDeleteTicket = computed(() =>
     usePage().props.auth.permissions?.includes('tickets.delete')
 );
@@ -134,10 +144,17 @@ const deleteTicket = (ticket) => {
         <template #header>
             <div class="flex justify-between items-center">
                 <span>Solicitudes</span>
-                <Button v-if="canCreateTicket" variant="outline" as-child
-                    class="h-9 px-4 border-emerald-600 text-emerald-600 hover:bg-emerald-600 hover:text-white dark:border-emerald-500 dark:text-emerald-400 dark:hover:bg-emerald-500 dark:hover:text-zinc-950 transition-colors">
-                    <Link :href="route('admin.tickets.create')">+ Nueva Solicitud</Link>
-                </Button>
+                <div class="flex gap-2">
+                    <a :href="exportUrl"
+                        class="inline-flex items-center h-9 px-4 text-sm font-medium rounded-md border border-gray-300 dark:border-zinc-700 text-gray-700 dark:text-zinc-300 bg-white dark:bg-zinc-950 hover:bg-gray-50 dark:hover:bg-zinc-800 transition-colors">
+                        <svg class="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+                        Exportar
+                    </a>
+                    <Button v-if="canCreateTicket" variant="outline" as-child
+                        class="h-9 px-4 border-emerald-600 text-emerald-600 hover:bg-emerald-600 hover:text-white dark:border-emerald-500 dark:text-emerald-400 dark:hover:bg-emerald-500 dark:hover:text-zinc-950 transition-colors">
+                        <Link :href="route('admin.tickets.create')">+ Nueva Solicitud</Link>
+                    </Button>
+                </div>
             </div>
         </template>
 
