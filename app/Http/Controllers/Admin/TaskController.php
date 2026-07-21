@@ -21,8 +21,8 @@ class TaskController extends Controller
     public function __construct()
     {
         $this->middleware('permission:tasks.read')->only('index', 'show');
-        $this->middleware('permission:tasks.create')->only('create', 'store');
-        $this->middleware('permission:tasks.update')->only('edit', 'update', 'updateStatus');
+        $this->middleware('permission:tasks.create')->only('create', 'createPersonal', 'store', 'storePersonal');
+        $this->middleware('permission:tasks.update')->only('edit', 'update');
         $this->middleware('permission:tasks.complete')->only('complete');
         $this->middleware('permission:tasks.delete')->only('destroy');
     }
@@ -144,14 +144,36 @@ class TaskController extends Controller
         return redirect()->route('admin.tasks.index', ['company_id' => $company->id]);
     }
 
-    public function updateStatus(Request $request, Company $company, Task $task)
+    public function createPersonal()
+    {
+        return Inertia::render('Admin/Tasks/Create', [
+            'users' => User::all(['id', 'name']),
+            'statuses' => TaskStatus::values(),
+            'types' => TaskType::values(),
+            'priorities' => TaskPriority::values(),
+            'companies' => Company::select('id', 'name')->where('is_active', true)->get(),
+        ]);
+    }
+
+    public function storePersonal(Request $request, CreateTaskAction $createTask)
     {
         $validated = $request->validate([
-            'status' => 'required|string|in:' . implode(',', TaskStatus::values()),
+            'name' => 'required|string|max:255',
+            'description' => 'nullable|string',
+            'status' => 'nullable|string|in:' . implode(',', TaskStatus::values()),
+            'due_date' => 'nullable|date',
+            'taskable_type' => 'nullable|string|max:255',
+            'taskable_id' => 'nullable|integer',
+            'assigned_user_id' => 'nullable|exists:users,id',
+            'is_recurring' => 'nullable|boolean',
+            'recurrence_interval' => 'nullable|string|in:daily,weekly,biweekly,monthly,quarterly,semi-annually,annually',
+            'type' => 'nullable|string|in:' . implode(',', TaskType::values()),
+            'priority' => 'nullable|string|in:' . implode(',', TaskPriority::values()),
+            'company_id' => 'required|exists:companies,id',
         ]);
 
-        $task->update($validated);
+        $createTask->execute($validated);
 
-        return redirect()->route('admin.tasks.index', ['company_id' => $company->id]);
+        return redirect()->route('admin.tasks.index', ['company_id' => $validated['company_id']]);
     }
 }

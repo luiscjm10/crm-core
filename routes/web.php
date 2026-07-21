@@ -41,6 +41,8 @@ Route::middleware('auth')->group(function () {
         Route::resource('roles', \App\Http\Controllers\Admin\RoleController::class)->except('show');
         Route::get('permissions', [\App\Http\Controllers\Admin\PermissionController::class, 'index'])->name('permissions.index');
         Route::get('tasks', [\App\Http\Controllers\Admin\TaskController::class, 'index'])->name('tasks.index');
+        Route::get('tasks/create', [\App\Http\Controllers\Admin\TaskController::class, 'createPersonal'])->name('tasks.create');
+        Route::post('tasks', [\App\Http\Controllers\Admin\TaskController::class, 'storePersonal'])->name('tasks.store');
         Route::post('comments', [\App\Http\Controllers\CommentController::class, 'store'])->name('comments.store');
         Route::get('ticket-types', [\App\Http\Controllers\Admin\TicketTypeController::class, 'index'])->name('ticket-types.index');
         Route::post('ticket-types', [\App\Http\Controllers\Admin\TicketTypeController::class, 'store'])->name('ticket-types.store');
@@ -66,7 +68,6 @@ Route::middleware('auth')->group(function () {
         Route::get('tasks/{task}/edit', [\App\Http\Controllers\Admin\TaskController::class, 'edit'])->name('edit');
         Route::put('tasks/{task}', [\App\Http\Controllers\Admin\TaskController::class, 'update'])->name('update');
         Route::patch('tasks/{task}/complete', [\App\Http\Controllers\Admin\TaskController::class, 'complete'])->name('complete');
-        Route::patch('tasks/{task}/update-status', [\App\Http\Controllers\Admin\TaskController::class, 'updateStatus'])->name('update-status');
         Route::delete('tasks/{task}', [\App\Http\Controllers\Admin\TaskController::class, 'destroy'])->name('destroy');
     });
 });

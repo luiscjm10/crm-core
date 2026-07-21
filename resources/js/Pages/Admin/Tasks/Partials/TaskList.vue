@@ -76,7 +76,7 @@ const showCompany = computed(() => props.currentCompanyId === 'all');
 </script>
 
 <template>
-    <div class="mt-6">
+    <div>
         <Table>
             <TableHeader>
                 <TableRow>

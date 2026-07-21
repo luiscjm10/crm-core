@@ -12,7 +12,7 @@ const props = defineProps({
     statuses: Array,
     types: Array,
     priorities: Array,
-    company: Object,
+    companies: Array,
 });
 
 const statusLabels = {
@@ -57,10 +57,11 @@ const form = useForm({
     assigned_user_id: '',
     is_recurring: false,
     recurrence_interval: '',
+    company_id: '',
 });
 
 const submit = () => {
-    form.post(route('admin.companies.tasks.store', props.company.id));
+    form.post(route('admin.tasks.store'));
 };
 </script>
 
@@ -70,7 +71,7 @@ const submit = () => {
     <AuthenticatedLayout>
         <template #header>
             <div class="flex items-center gap-4">
-                <Link :href="route('admin.tasks.index', { company_id: props.company.id })"
+                <Link :href="route('admin.tasks.index')"
                     class="text-gray-500 hover:text-emerald-600 dark:text-zinc-400 dark:hover:text-emerald-400 transition-colors flex items-center justify-center h-8 w-8 rounded-full hover:bg-gray-100 dark:hover:bg-zinc-800/50">
                     <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
                         stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -101,6 +102,16 @@ const submit = () => {
                                 class="flex w-full rounded-md border border-gray-300 dark:border-zinc-800 bg-white dark:bg-zinc-950 px-3 py-2 text-sm text-gray-900 dark:text-zinc-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 min-h-[100px]"
                                 placeholder="Descripción detallada (opcional)"></textarea>
                             <p class="text-sm text-red-500" v-if="form.errors.description">{{ form.errors.description }}</p>
+                        </div>
+
+                        <div class="space-y-2">
+                            <Label for="company_id">Compañía <span class="text-red-500">*</span></Label>
+                            <select id="company_id" v-model="form.company_id" required
+                                class="flex w-full rounded-md border border-gray-300 dark:border-zinc-800 bg-white dark:bg-zinc-950 px-3 py-2 text-sm text-gray-900 dark:text-zinc-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500">
+                                <option value="" disabled>Seleccionar...</option>
+                                <option v-for="c in companies" :key="c.id" :value="c.id">{{ c.name }}</option>
+                            </select>
+                            <p class="text-sm text-red-500" v-if="form.errors.company_id">{{ form.errors.company_id }}</p>
                         </div>
 
                         <div class="space-y-2">
@@ -174,7 +185,7 @@ const submit = () => {
 
                     <div class="flex items-center justify-end gap-4 pt-4 border-t border-gray-100 dark:border-zinc-800/50">
                         <Button type="button" variant="ghost" as-child>
-                            <Link :href="route('admin.tasks.index', { company_id: props.company.id })">Cancelar</Link>
+                            <Link :href="route('admin.tasks.index')">Cancelar</Link>
                         </Button>
                         <Button type="submit"
                             class="bg-emerald-600 text-white hover:bg-emerald-700 dark:bg-emerald-600 dark:hover:bg-emerald-500"

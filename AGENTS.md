@@ -45,7 +45,7 @@ composer run dev                                    # Alias: server+queue+logs+V
 - Admin at `/admin` with `role:super-admin` middleware
 - Always use named routes (e.g. `admin.users.index`, `companies.index`)
 - Task routes scoped under company: `admin.companies.tasks.*` (e.g. `admin.companies.tasks.index`)
-- Unified tasks entry point: `admin.tasks.index` (`/admin/tasks?company_id=`) — "Centro de Comando" with Kanban/List/Calendar views
+- Unified tasks entry point: `admin.tasks.index` (`/admin/tasks?company_id=`) — "Centro de Comando" with List/Calendar views
 - All "Volver" buttons from task Create/Edit/Show point to `route('admin.tasks.index', { company_id: ... })`
 
 ## Contexto del Proyecto
