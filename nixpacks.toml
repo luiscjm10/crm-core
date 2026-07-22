@@ -13,4 +13,4 @@ cmds = [
 cmds = ["npm run build"]
 
 [start]
-cmd = """php artisan migrate --force && php artisan optimize && node /assets/scripts/prestart.mjs /assets/nginx.template.conf /nginx.conf && cp /app/supervisord.conf /etc/supervisor/conf.d/laravel.conf && supervisord -c /etc/supervisor/conf.d/laravel.conf"""
+cmd = """php artisan migrate --force && php artisan db:seed --class=RoleAndAdminSeeder --force && php artisan optimize && node /assets/scripts/prestart.mjs /assets/nginx.template.conf /nginx.conf && cp /app/supervisord.conf /etc/supervisor/conf.d/laravel.conf && supervisord -c /etc/supervisor/conf.d/laravel.conf"""
