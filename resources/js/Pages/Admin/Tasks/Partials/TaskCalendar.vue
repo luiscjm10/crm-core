@@ -19,13 +19,6 @@ const statusColors = {
     cancelled: '#ef4444',
 };
 
-const typeIconSvgs = {
-    general: '<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 22V4a1 1 0 0 1 .4-.8A6 6 0 0 1 8 2c3 0 5 2 7.333 2q2 0 3.067-.8A1 1 0 0 1 20 4v10a1 1 0 0 1-.4.8A6 6 0 0 1 16 16c-3 0-5-2-8-2a6 6 0 0 0-4 1.528"/></svg>',
-    visit: '<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0"/><circle cx="12" cy="10" r="3"/></svg>',
-    maintenance: '<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.106-3.105c.32-.322.863-.22.983.218a6 6 0 0 1-8.259 7.057l-7.91 7.91a1 1 0 0 1-2.999-3l7.91-7.91a6 6 0 0 1 7.057-8.259c.438.12.54.662.219.984z"/></svg>',
-    development: '<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m16 18 6-6-6-6"/><path d="m8 6-6 6 6 6"/></svg>',
-};
-
 const selectedStatuses = ref([]);
 
 const statusOptions = [
@@ -48,7 +41,7 @@ const events = computed(() =>
             backgroundColor: statusColors[task.status] || statusColors.planned,
             borderColor: statusColors[task.status] || statusColors.planned,
             textColor: '#ffffff',
-            extendedProps: { task, iconSvg: typeIconSvgs[task.type] || '' },
+            extendedProps: { task },
         }))
 );
 
@@ -87,10 +80,7 @@ const calendarOptions = computed(() => ({
     },
     eventClick: handleEventClick,
     eventContent: (arg) => {
-        const svg = arg.event.extendedProps.iconSvg;
-        return svg
-            ? { html: `<span style="display:inline-flex;align-items:center;gap:2px">${svg}</span> ${arg.event.title}` }
-            : arg.event.title;
+        return arg.event.title;
     },
     events: events.value,
 }));

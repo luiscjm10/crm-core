@@ -28,7 +28,7 @@ class CompleteTaskAction
                     'creator_id' => $task->creator_id,
                     'is_recurring' => true,
                     'recurrence_interval' => $task->recurrence_interval,
-                    'type' => $task->type,
+                    'task_type_id' => $task->task_type_id,
                     'priority' => $task->priority,
                 ]);
 

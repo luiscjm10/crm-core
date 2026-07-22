@@ -5,7 +5,6 @@ namespace App\Domains\Projects;
 use App\Domains\Clients\Company;
 use App\Domains\Projects\Enums\TaskPriority;
 use App\Domains\Projects\Enums\TaskStatus;
-use App\Domains\Projects\Enums\TaskType;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Builder;
@@ -26,7 +25,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
     'company_id',
     'is_recurring',
     'recurrence_interval',
-    'type',
+    'task_type_id',
     'priority',
 ])]
 class Task extends Model
@@ -38,7 +37,6 @@ class Task extends Model
         return [
             'due_date' => 'date:Y-m-d',
             'is_recurring' => 'boolean',
-            'type' => TaskType::class,
             'priority' => TaskPriority::class,
         ];
     }
@@ -61,6 +59,11 @@ class Task extends Model
     public function company(): BelongsTo
     {
         return $this->belongsTo(Company::class);
+    }
+
+    public function taskType(): BelongsTo
+    {
+        return $this->belongsTo(TaskType::class);
     }
 
     public function scopeStatus(Builder $query, TaskStatus $status): Builder

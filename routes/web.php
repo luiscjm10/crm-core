@@ -48,6 +48,10 @@ Route::middleware('auth')->group(function () {
         Route::post('ticket-types', [\App\Http\Controllers\Admin\TicketTypeController::class, 'store'])->name('ticket-types.store');
         Route::put('ticket-types/{ticketType}', [\App\Http\Controllers\Admin\TicketTypeController::class, 'update'])->name('ticket-types.update');
         Route::delete('ticket-types/{ticketType}', [\App\Http\Controllers\Admin\TicketTypeController::class, 'destroy'])->name('ticket-types.destroy');
+        Route::get('task-types', [\App\Http\Controllers\Admin\TaskTypeController::class, 'index'])->name('task-types.index');
+        Route::post('task-types', [\App\Http\Controllers\Admin\TaskTypeController::class, 'store'])->name('task-types.store');
+        Route::put('task-types/{taskType}', [\App\Http\Controllers\Admin\TaskTypeController::class, 'update'])->name('task-types.update');
+        Route::delete('task-types/{taskType}', [\App\Http\Controllers\Admin\TaskTypeController::class, 'destroy'])->name('task-types.destroy');
     });
 
     Route::prefix('admin')->name('admin.tickets.')->group(function () {

@@ -1,6 +1,5 @@
 <script setup>
 import { Link } from '@inertiajs/vue3';
-import { Flag, MapPin, Wrench, Code } from '@lucide/vue';
 import {
     Table,
     TableBody,
@@ -20,26 +19,12 @@ const props = defineProps({
 
 const emit = defineEmits(['open-task', 'complete-task', 'delete-task']);
 
-const typeIcons = {
-    general: Flag,
-    visit: MapPin,
-    maintenance: Wrench,
-    development: Code,
-};
-
 const statusLabels = {
     planned: 'Planeadas',
     todo: 'Por hacer',
     in_progress: 'En progreso',
     done: 'Completadas',
     cancelled: 'Canceladas',
-};
-
-const typeLabels = {
-    general: 'General',
-    visit: 'Visita',
-    maintenance: 'Mantenimiento',
-    development: 'Desarrollo',
 };
 
 const priorityLabels = {
@@ -64,10 +49,10 @@ const statusColors = {
     cancelled: 'bg-red-100 dark:bg-red-900 text-red-700 dark:text-red-300',
 };
 
-const formatDate = (date) => formatDateOnly(date);
-
 import { computed } from 'vue';
 import { formatDateOnly, isOverdue } from '@/helpers/date';
+
+const formatDate = (date) => formatDateOnly(date);
 
 const canComplete = (task) =>
     !['done', 'cancelled'].includes(task.status);
@@ -95,16 +80,12 @@ const showCompany = computed(() => props.currentCompanyId === 'all');
                     class="cursor-pointer" @click="emit('open-task', task)">
                     <TableCell class="font-medium">
                         <div class="flex items-center gap-2">
-                            <component :is="typeIcons[task.type]" class="h-4 w-4 shrink-0 text-muted-foreground" />
                             {{ task.name }}
                         </div>
                     </TableCell>
                     <TableCell v-if="showCompany">{{ task.company?.name }}</TableCell>
                     <TableCell>
-                        <div class="flex items-center gap-1.5">
-                            <component :is="typeIcons[task.type]" class="h-3.5 w-3.5 text-muted-foreground" />
-                            <span class="text-sm">{{ typeLabels[task.type] || task.type }}</span>
-                        </div>
+                        <span class="text-sm">{{ task.task_type?.name || '—' }}</span>
                     </TableCell>
                     <TableCell>
                         <span class="inline-flex items-center text-xs font-medium rounded-full px-2.5 py-0.5"

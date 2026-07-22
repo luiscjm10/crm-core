@@ -10,7 +10,7 @@ import { Label } from '@/components/ui/label';
 const props = defineProps({
     users: Array,
     statuses: Array,
-    types: Array,
+    taskTypes: Array,
     priorities: Array,
     companies: Array,
 });
@@ -21,13 +21,6 @@ const statusLabels = {
     in_progress: 'En progreso',
     done: 'Completada',
     cancelled: 'Cancelada',
-};
-
-const typeLabels = {
-    general: 'General',
-    visit: 'Visita',
-    maintenance: 'Mantenimiento',
-    development: 'Desarrollo',
 };
 
 const priorityLabels = {
@@ -51,7 +44,7 @@ const form = useForm({
     name: '',
     description: '',
     status: 'planned',
-    type: 'general',
+    task_type_id: '',
     priority: 'medium',
     due_date: '',
     assigned_user_id: '',
@@ -124,12 +117,13 @@ const submit = () => {
                         </div>
 
                         <div class="space-y-2">
-                            <Label for="type">Tipo de Tarea</Label>
-                            <select id="type" v-model="form.type"
+                            <Label for="task_type_id">Tipo de Tarea</Label>
+                            <select id="task_type_id" v-model="form.task_type_id"
                                 class="flex w-full rounded-md border border-gray-300 dark:border-zinc-800 bg-white dark:bg-zinc-950 px-3 py-2 text-sm text-gray-900 dark:text-zinc-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500">
-                                <option v-for="t in types" :key="t" :value="t">{{ typeLabels[t] || t }}</option>
+                                <option value="">Sin tipo...</option>
+                                <option v-for="t in taskTypes" :key="t.id" :value="t.id">{{ t.name }}</option>
                             </select>
-                            <p class="text-sm text-red-500" v-if="form.errors.type">{{ form.errors.type }}</p>
+                            <p class="text-sm text-red-500" v-if="form.errors.task_type_id">{{ form.errors.task_type_id }}</p>
                         </div>
 
                         <div class="space-y-2">

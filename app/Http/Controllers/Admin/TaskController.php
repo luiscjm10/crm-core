@@ -11,7 +11,7 @@ use App\Domains\Projects\Actions\DeleteTaskAction;
 use App\Domains\Projects\Actions\CompleteTaskAction;
 use App\Domains\Projects\Enums\TaskPriority;
 use App\Domains\Projects\Enums\TaskStatus;
-use App\Domains\Projects\Enums\TaskType;
+use App\Domains\Projects\TaskType;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -32,7 +32,7 @@ class TaskController extends Controller
         $perPage = in_array($request->input('perPage'), [10, 20, 50, 100]) ? (int) $request->input('perPage') : 10;
         $companyId = $request->get('company_id');
 
-        $tasks = Task::with('assignedUser', 'creator', 'company');
+        $tasks = Task::with('assignedUser', 'creator', 'company', 'taskType');
 
         if ($companyId && $companyId !== 'all') {
             $tasks->where('company_id', $companyId);
@@ -44,7 +44,7 @@ class TaskController extends Controller
         return Inertia::render('Admin/Tasks/Index', [
             'tasks' => $tasks,
             'statuses' => TaskStatus::values(),
-            'types' => TaskType::values(),
+            'taskTypes' => TaskType::where('is_active', true)->orderBy('name')->get(),
             'priorities' => TaskPriority::values(),
             'companies' => Company::select('id', 'name')->where('is_active', true)->get(),
             'currentCompanyId' => $companyId ?: 'all',
@@ -56,7 +56,7 @@ class TaskController extends Controller
         return Inertia::render('Admin/Tasks/Create', [
             'users' => User::all(['id', 'name']),
             'statuses' => TaskStatus::values(),
-            'types' => TaskType::values(),
+            'taskTypes' => TaskType::where('is_active', true)->orderBy('name')->get(),
             'priorities' => TaskPriority::values(),
             'company' => $company,
         ]);
@@ -74,7 +74,7 @@ class TaskController extends Controller
             'assigned_user_id' => 'nullable|exists:users,id',
             'is_recurring' => 'nullable|boolean',
             'recurrence_interval' => 'nullable|string|in:daily,weekly,biweekly,monthly,quarterly,semi-annually,annually',
-            'type' => 'nullable|string|in:' . implode(',', TaskType::values()),
+            'task_type_id' => 'nullable|exists:task_types,id',
             'priority' => 'nullable|string|in:' . implode(',', TaskPriority::values()),
         ]);
 
@@ -103,7 +103,7 @@ class TaskController extends Controller
             'task' => $task,
             'users' => User::all(['id', 'name']),
             'statuses' => TaskStatus::values(),
-            'types' => TaskType::values(),
+            'taskTypes' => TaskType::where('is_active', true)->orderBy('name')->get(),
             'priorities' => TaskPriority::values(),
             'company' => $company,
         ]);
@@ -121,7 +121,7 @@ class TaskController extends Controller
             'assigned_user_id' => 'nullable|exists:users,id',
             'is_recurring' => 'nullable|boolean',
             'recurrence_interval' => 'nullable|string|in:daily,weekly,biweekly,monthly,quarterly,semi-annually,annually',
-            'type' => 'nullable|string|in:' . implode(',', TaskType::values()),
+            'task_type_id' => 'nullable|exists:task_types,id',
             'priority' => 'nullable|string|in:' . implode(',', TaskPriority::values()),
         ]);
 
@@ -149,7 +149,7 @@ class TaskController extends Controller
         return Inertia::render('Admin/Tasks/Create', [
             'users' => User::all(['id', 'name']),
             'statuses' => TaskStatus::values(),
-            'types' => TaskType::values(),
+            'taskTypes' => TaskType::where('is_active', true)->orderBy('name')->get(),
             'priorities' => TaskPriority::values(),
             'companies' => Company::select('id', 'name')->where('is_active', true)->get(),
         ]);
@@ -167,7 +167,7 @@ class TaskController extends Controller
             'assigned_user_id' => 'nullable|exists:users,id',
             'is_recurring' => 'nullable|boolean',
             'recurrence_interval' => 'nullable|string|in:daily,weekly,biweekly,monthly,quarterly,semi-annually,annually',
-            'type' => 'nullable|string|in:' . implode(',', TaskType::values()),
+            'task_type_id' => 'nullable|exists:task_types,id',
             'priority' => 'nullable|string|in:' . implode(',', TaskPriority::values()),
             'company_id' => 'required|exists:companies,id',
         ]);

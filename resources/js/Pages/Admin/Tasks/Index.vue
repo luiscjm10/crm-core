@@ -4,7 +4,6 @@ import { Head, Link, router, usePage } from '@inertiajs/vue3';
 import Swal from 'sweetalert2';
 import { useDark } from '@vueuse/core';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
-import { Flag, MapPin, Wrench, Code } from '@lucide/vue';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import {
@@ -22,7 +21,7 @@ import TaskCalendar from './Partials/TaskCalendar.vue';
 const props = defineProps({
     tasks: Object,
     statuses: Array,
-    types: Array,
+    taskTypes: Array,
     priorities: Array,
     companies: Array,
     currentCompanyId: String,
@@ -36,20 +35,6 @@ const canCreateTask = computed(() => taskPermissions.value.includes('tasks.creat
 const canUpdateTask = computed(() => taskPermissions.value.includes('tasks.update'));
 const canDeleteTask = computed(() => taskPermissions.value.includes('tasks.delete'));
 const canCompleteTask = computed(() => taskPermissions.value.includes('tasks.complete'));
-
-const typeIcons = {
-    general: Flag,
-    visit: MapPin,
-    maintenance: Wrench,
-    development: Code,
-};
-
-const typeLabels = {
-    general: 'General',
-    visit: 'Visita',
-    maintenance: 'Mantenimiento',
-    development: 'Desarrollo',
-};
 
 const priorityLabels = {
     low: 'Baja',
@@ -286,9 +271,8 @@ const viewComponents = {
 
                     <div class="flex items-center gap-2">
                         <span class="text-sm text-muted-foreground w-24 shrink-0">Tipo</span>
-                        <span class="inline-flex items-center gap-1.5 text-sm font-medium">
-                            <component :is="typeIcons[selectedTask?.type]" class="h-4 w-4" />
-                            {{ typeLabels[selectedTask?.type] || selectedTask?.type }}
+                        <span class="text-sm font-medium">
+                            {{ selectedTask?.task_type?.name || '—' }}
                         </span>
                     </div>
 
