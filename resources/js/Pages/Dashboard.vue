@@ -4,7 +4,7 @@ import { Head } from '@inertiajs/vue3';
 import TicketStatsCards from '@/Components/TicketStatsCards.vue';
 
 const props = defineProps({
-    stats: { type: Object, default: () => ({ open: 0, in_progress: 0, resolved: 0, closed: 0 }) },
+    stats: { type: Object, default: () => ({ open: 0, in_progress: 0, closed: 0 }) },
     period: { type: String, default: '' },
 });
 </script>

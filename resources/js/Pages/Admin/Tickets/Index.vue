@@ -56,14 +56,12 @@ const canViewResolutionTime = computed(() =>
 const statusLabels = {
     open: 'Abierto',
     in_progress: 'En progreso',
-    resolved: 'Resuelto',
     closed: 'Cerrado',
 };
 
 const statusColors = {
     open: 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300',
     in_progress: 'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300',
-    resolved: 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-300',
     closed: 'bg-zinc-100 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400',
 };
 
@@ -177,7 +175,6 @@ const deleteTicket = (ticket) => {
                             <option value="">Todos</option>
                             <option value="open">Abierto</option>
                             <option value="in_progress">En progreso</option>
-                            <option value="resolved">Resuelto</option>
                             <option value="closed">Cerrado</option>
                         </select>
                     </div>

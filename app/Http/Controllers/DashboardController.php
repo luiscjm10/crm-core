@@ -39,7 +39,6 @@ class DashboardController extends Controller
         $stats = [
             'open' => (clone $query)->where('status', 'open')->count(),
             'in_progress' => (clone $query)->where('status', 'in_progress')->count(),
-            'resolved' => (clone $query)->where('status', 'resolved')->count(),
             'closed' => (clone $query)->where('status', 'closed')->count(),
         ];
 

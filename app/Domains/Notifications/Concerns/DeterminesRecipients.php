@@ -2,6 +2,7 @@
 
 namespace App\Domains\Notifications\Concerns;
 
+use App\Domains\Notifications\Events\TicketAssigned;
 use App\Domains\Notifications\Events\TicketClosed;
 use App\Domains\Notifications\Events\TicketCommented;
 use App\Domains\Notifications\Events\TicketCreated;
@@ -9,20 +10,29 @@ use App\Models\User;
 
 trait DeterminesRecipients
 {
-    protected function getRecipients(TicketCreated|TicketCommented|TicketClosed $event): array
+    protected function getRecipients(TicketCreated|TicketCommented|TicketClosed|TicketAssigned $event): array
     {
         $ticket = $event->ticket;
         $actor = $event->actor;
         $userIds = [];
 
-        if ($ticket->creator_id && $ticket->creator_id !== $actor->id) {
-            $userIds[] = $ticket->creator_id;
-        }
-        if ($ticket->requester_id && $ticket->requester_id !== $actor->id) {
-            $userIds[] = $ticket->requester_id;
-        }
-        if ($ticket->assigned_to && $ticket->assigned_to !== $actor->id) {
-            $userIds[] = $ticket->assigned_to;
+        if ($event instanceof TicketAssigned) {
+            if ($event->assignee && $event->assignee->id !== $actor->id) {
+                $userIds[] = $event->assignee->id;
+            }
+            if ($ticket->creator_id && $ticket->creator_id !== $actor->id) {
+                $userIds[] = $ticket->creator_id;
+            }
+        } else {
+            if ($ticket->creator_id && $ticket->creator_id !== $actor->id) {
+                $userIds[] = $ticket->creator_id;
+            }
+            if ($ticket->requester_id && $ticket->requester_id !== $actor->id) {
+                $userIds[] = $ticket->requester_id;
+            }
+            if ($ticket->assigned_to && $ticket->assigned_to !== $actor->id) {
+                $userIds[] = $ticket->assigned_to;
+            }
         }
 
         $userIds = array_unique(array_filter($userIds));

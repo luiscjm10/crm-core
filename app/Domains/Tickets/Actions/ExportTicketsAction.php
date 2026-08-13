@@ -80,7 +80,6 @@ class ExportTicketsAction
         $statusLabels = [
             'open' => 'Abierto',
             'in_progress' => 'En progreso',
-            'resolved' => 'Resuelto',
             'closed' => 'Cerrado',
         ];
 

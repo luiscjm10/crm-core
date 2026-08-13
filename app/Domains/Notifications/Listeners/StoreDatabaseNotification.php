@@ -3,6 +3,7 @@
 namespace App\Domains\Notifications\Listeners;
 
 use App\Domains\Notifications\Concerns\DeterminesRecipients;
+use App\Domains\Notifications\Events\TicketAssigned;
 use App\Domains\Notifications\Events\TicketClosed;
 use App\Domains\Notifications\Events\TicketCommented;
 use App\Domains\Notifications\Events\TicketCreated;
@@ -13,7 +14,7 @@ class StoreDatabaseNotification implements ShouldQueue
 {
     use DeterminesRecipients;
 
-    public function handle(TicketCreated|TicketCommented|TicketClosed $event): void
+    public function handle(TicketCreated|TicketCommented|TicketClosed|TicketAssigned $event): void
     {
         $recipients = $this->getRecipients($event);
         $data = $this->buildData($event);
@@ -22,6 +23,7 @@ class StoreDatabaseNotification implements ShouldQueue
             $event instanceof TicketCreated => 'ticket.created',
             $event instanceof TicketCommented => 'ticket.commented',
             $event instanceof TicketClosed => 'ticket.closed',
+            $event instanceof TicketAssigned => 'ticket.assigned',
         };
 
         foreach ($recipients as $user) {
@@ -33,7 +35,7 @@ class StoreDatabaseNotification implements ShouldQueue
         }
     }
 
-    private function buildData(TicketCreated|TicketCommented|TicketClosed $event): array
+    private function buildData(TicketCreated|TicketCommented|TicketClosed|TicketAssigned $event): array
     {
         $ticket = $event->ticket;
         $url = route('admin.tickets.show', $ticket);
@@ -55,6 +57,9 @@ class StoreDatabaseNotification implements ShouldQueue
         } elseif ($event instanceof TicketClosed) {
             $base['description'] = 'Ticket cerrado';
             $base['description_detail'] = 'El ticket fue cerrado por ' . $event->actor->name;
+        } elseif ($event instanceof TicketAssigned) {
+            $base['description'] = 'Ticket asignado';
+            $base['description_detail'] = 'Asignado a ' . ($event->assignee?->name ?? '—') . ' por ' . $event->actor->name;
         }
 
         return $base;

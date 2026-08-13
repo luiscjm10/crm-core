@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Domains\Notifications\Events\TicketAssigned;
 use App\Domains\Notifications\Events\TicketClosed;
 use App\Domains\Notifications\Events\TicketCreated;
 use App\Domains\Tickets\Actions\CloseTicketAction;
@@ -13,6 +14,7 @@ use App\Domains\Tickets\Actions\ExportTicketsAction;
 use App\Domains\Tickets\Ticket;
 use App\Domains\Tickets\TicketType;
 use App\Http\Controllers\Controller;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
@@ -200,13 +202,110 @@ class TicketController extends Controller
         $canLogTime = $user->can('tickets.log-time');
         $canViewResolutionTime = $user->can('tickets.view-resolution-time');
 
+        $canAssign = $user->hasRole('super-admin') || $user->can('tickets.assign');
+        $canTake = $ticket->status !== 'closed'
+            && $ticket->assigned_to === null
+            && ($user->hasRole('super-admin') || $user->can('tickets.take'));
+
+        $canToggleStatus = ($ticket->status === 'open' || $ticket->status === 'in_progress')
+            && ($user->hasRole('super-admin') || $user->id === $ticket->assigned_to);
+
+        $users = $ticket->company
+            ? User::whereHas('companies', fn($q) => $q->whereKey($ticket->company_id))
+                ->orderBy('name')
+                ->get(['id', 'name', 'last_name'])
+            : collect();
+
         return Inertia::render('Admin/Tickets/Show', [
             'ticket' => $ticket,
             'canClose' => $canClose,
             'canComment' => $canComment,
             'canLogTime' => $canLogTime,
             'canViewResolutionTime' => $canViewResolutionTime,
+            'canAssign' => $canAssign,
+            'canTake' => $canTake,
+            'canToggleStatus' => $canToggleStatus,
+            'users' => $users,
         ]);
+    }
+
+    public function assign(Request $request, Ticket $ticket, AssignTicketAction $assignTicket)
+    {
+        $user = $request->user();
+
+        abort_unless($user->hasRole('super-admin') || $user->can('tickets.assign'), 403, 'No tienes permiso para asignar tickets.');
+
+        abort_if($ticket->status === 'closed', 422, 'No se puede asignar un ticket cerrado.');
+
+        $validated = $request->validate([
+            'assigned_to' => [
+                'nullable',
+                'exists:users,id',
+                function ($attribute, $value, $fail) use ($ticket) {
+                    if (!$value) {
+                        return;
+                    }
+
+                    $belongsToCompany = User::whereKey($value)
+                        ->whereHas('companies', fn($sub) => $sub->whereKey($ticket->company_id))
+                        ->exists();
+
+                    if (!$belongsToCompany) {
+                        $fail('El usuario no está asignado a la empresa de esta solicitud.');
+                    }
+                },
+            ],
+        ]);
+
+        $ticket = $assignTicket->execute($ticket, $validated['assigned_to']);
+
+        if ($ticket->assignee) {
+            event(new TicketAssigned($ticket, $user, $ticket->assignee));
+        }
+
+        $message = $ticket->assignee
+            ? 'Ticket asignado a ' . $ticket->assignee->name . '.'
+            : 'Ticket liberado.';
+
+        return redirect()->back()->with('success', $message);
+    }
+
+    public function take(Request $request, Ticket $ticket, AssignTicketAction $assignTicket)
+    {
+        $user = $request->user();
+
+        abort_unless($user->hasRole('super-admin') || $user->can('tickets.take'), 403, 'No tienes permiso para tomar tickets.');
+
+        abort_if($ticket->status === 'closed', 422, 'No se puede tomar un ticket cerrado.');
+
+        abort_if($ticket->assigned_to !== null, 422, 'Este ticket ya tiene un responsable asignado.');
+
+        $ticket = $assignTicket->execute($ticket, $user->id);
+
+        event(new TicketAssigned($ticket, $user, $ticket->assignee));
+
+        return redirect()->back()->with('success', 'Ticket tomado correctamente.');
+    }
+
+    public function updateStatus(Request $request, Ticket $ticket, UpdateTicketStatusAction $updateStatus)
+    {
+        $user = $request->user();
+
+        abort_unless($user->hasRole('super-admin') || $user->id === $ticket->assigned_to, 403, 'No tienes permiso para cambiar el estado de esta solicitud.');
+
+        $status = match ($ticket->status) {
+            'open' => 'in_progress',
+            'in_progress' => 'open',
+            default => abort(422, 'No se puede cambiar el estado de una solicitud cerrada.'),
+        };
+
+        $updateStatus->execute($ticket, $status, $user);
+
+        $message = $status === 'in_progress'
+            ? 'Solicitud marcada como En progreso.'
+            : 'Solicitud abierta de nuevo.';
+
+        return redirect()->back()->with('success', $message);
     }
 
     public function close(Request $request, Ticket $ticket, CloseTicketAction $closeTicket)

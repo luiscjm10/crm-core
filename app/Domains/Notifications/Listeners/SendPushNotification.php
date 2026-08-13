@@ -3,6 +3,7 @@
 namespace App\Domains\Notifications\Listeners;
 
 use App\Domains\Notifications\Concerns\DeterminesRecipients;
+use App\Domains\Notifications\Events\TicketAssigned;
 use App\Domains\Notifications\Events\TicketClosed;
 use App\Domains\Notifications\Events\TicketCommented;
 use App\Domains\Notifications\Events\TicketCreated;
@@ -18,7 +19,7 @@ class SendPushNotification implements ShouldQueue
         private readonly PushNotificationService $pushService,
     ) {}
 
-    public function handle(TicketCreated|TicketCommented|TicketClosed $event): void
+    public function handle(TicketCreated|TicketCommented|TicketClosed|TicketAssigned $event): void
     {
         $recipients = $this->getRecipients($event);
         $notification = $this->buildNotification($event);
@@ -37,7 +38,7 @@ class SendPushNotification implements ShouldQueue
         }
     }
 
-    private function buildNotification(TicketCreated|TicketCommented|TicketClosed $event): array
+    private function buildNotification(TicketCreated|TicketCommented|TicketClosed|TicketAssigned $event): array
     {
         $ticket = $event->ticket;
         $companyName = $ticket->company?->name ?? 'Sin empresa';
@@ -79,6 +80,18 @@ class SendPushNotification implements ShouldQueue
                     'url' => $url,
                     'ticketUuid' => $ticket->uuid,
                     'tag' => "{$tag}-closed",
+                ],
+            ];
+        }
+
+        if ($event instanceof TicketAssigned) {
+            return [
+                'title' => "{$companyName} — Ticket asignado",
+                'body' => 'Asignado a ' . ($event->assignee?->name ?? '—') . " por {$event->actor->name}",
+                'data' => [
+                    'url' => $url,
+                    'ticketUuid' => $ticket->uuid,
+                    'tag' => "{$tag}-assigned",
                 ],
             ];
         }

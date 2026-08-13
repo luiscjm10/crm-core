@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use App\Domains\Notifications\Events\TicketAssigned;
 use App\Domains\Notifications\Events\TicketClosed;
 use App\Domains\Notifications\Events\TicketCommented;
 use App\Domains\Notifications\Events\TicketCreated;
@@ -35,6 +36,8 @@ class AppServiceProvider extends ServiceProvider
         Event::listen(TicketCommented::class, StoreDatabaseNotification::class);
         Event::listen(TicketClosed::class, SendPushNotification::class);
         Event::listen(TicketClosed::class, StoreDatabaseNotification::class);
+        Event::listen(TicketAssigned::class, SendPushNotification::class);
+        Event::listen(TicketAssigned::class, StoreDatabaseNotification::class);
 
         // Forzar HTTPS cuando la aplicación esté en el entorno de producción
         // Esto resuelve el Mixed Content detrás del proxy de Cloudflare y los contenedores

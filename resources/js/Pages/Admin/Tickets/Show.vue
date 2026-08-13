@@ -1,8 +1,10 @@
 <script setup>
+import { computed, ref } from 'vue';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import { Head, Link, router, useForm } from '@inertiajs/vue3';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { formatDateOnly, formatDateTime, formatMinutes } from '@/helpers/date';
 import Swal from 'sweetalert2';
 
@@ -12,6 +14,10 @@ const props = defineProps({
     canComment: Boolean,
     canLogTime: Boolean,
     canViewResolutionTime: Boolean,
+    canAssign: Boolean,
+    canTake: Boolean,
+    canToggleStatus: Boolean,
+    users: Array,
 });
 
 const form = useForm({
@@ -21,11 +27,91 @@ const form = useForm({
     time_spent_minutes: null,
 });
 
+const assignForm = useForm({
+    assigned_to: '',
+});
+
+const dialogOpen = ref(false);
+const searchQuery = ref('');
+const selectedUserId = ref('');
+
+const filteredUsers = computed(() => {
+    const q = searchQuery.value.trim().toLowerCase();
+    if (!q) return props.users;
+
+    return props.users.filter((user) => {
+        const fullName = `${user.name} ${user.last_name ?? ''}`.toLowerCase();
+        return fullName.includes(q);
+    });
+});
+
+const getInitials = (user) => {
+    const first = (user.name ?? '').charAt(0);
+    const last = (user.last_name ?? '').charAt(0);
+    return `${first}${last}`.toUpperCase();
+};
+
+const openAssignDialog = () => {
+    searchQuery.value = '';
+    selectedUserId.value = props.ticket.assignee?.id ? String(props.ticket.assignee.id) : '';
+    assignForm.clearErrors();
+    dialogOpen.value = true;
+};
+
 const submitComment = () => {
     form.post(route('admin.comments.store'), {
         preserveScroll: true,
         onSuccess: () => form.reset('content', 'time_spent_minutes'),
     });
+};
+
+const submitAssign = () => {
+    if (!selectedUserId.value) return;
+
+    assignForm.assigned_to = selectedUserId.value;
+
+    assignForm.patch(route('admin.tickets.assign', props.ticket.uuid), {
+        preserveScroll: true,
+        onSuccess: () => {
+            dialogOpen.value = false;
+            selectedUserId.value = '';
+        },
+    });
+};
+
+const releaseTicket = () => {
+    dialogOpen.value = false;
+
+    Swal.fire({
+        title: '¿Liberar ticket?',
+        text: 'El ticket quedará sin responsable asignado.',
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonText: 'Sí, liberar',
+        cancelButtonText: 'Cancelar',
+        confirmButtonColor: '#10b981',
+        zIndex: 1100,
+    }).then((result) => {
+        if (result.isConfirmed) {
+            assignForm.assigned_to = null;
+
+            assignForm.patch(route('admin.tickets.assign', props.ticket.uuid), {
+                preserveScroll: true,
+                onSuccess: () => {
+                    dialogOpen.value = false;
+                    selectedUserId.value = '';
+                },
+            });
+        }
+    });
+};
+
+const takeTicket = () => {
+    router.patch(route('admin.tickets.take', props.ticket.uuid));
+};
+
+const toggleStatus = () => {
+    router.patch(route('admin.tickets.status', props.ticket.uuid));
 };
 
 const closeTicket = () => {
@@ -37,6 +123,7 @@ const closeTicket = () => {
         confirmButtonText: 'Sí, cerrar',
         cancelButtonText: 'Cancelar',
         confirmButtonColor: '#10b981',
+        zIndex: 1100,
     }).then((result) => {
         if (result.isConfirmed) {
             router.patch(route('admin.tickets.close', props.ticket.uuid));
@@ -47,14 +134,12 @@ const closeTicket = () => {
 const statusLabels = {
     open: 'Abierto',
     in_progress: 'En progreso',
-    resolved: 'Resuelto',
     closed: 'Cerrado',
 };
 
 const statusColors = {
     open: 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300',
     in_progress: 'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300',
-    resolved: 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-300',
     closed: 'bg-zinc-100 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400',
 };
 
@@ -96,14 +181,28 @@ const formatDate = (date) => {
                     <CardTitle class="text-xl font-mono text-sm">{{ ticket.uuid }}</CardTitle>
                     <CardDescription>Información general de la solicitud.</CardDescription>
                 </div>
-                <div class="flex items-center gap-2">
+                <div class="flex flex-wrap items-center gap-2">
+                    <Button v-if="canTake" @click="takeTicket"
+                        class="bg-emerald-600 text-white hover:bg-emerald-700 dark:bg-emerald-600 dark:hover:bg-emerald-500 text-sm">
+                        Tomar solicitud
+                    </Button>
+                    <Button v-if="canToggleStatus && ticket.status === 'open'" @click="toggleStatus"
+                        class="bg-amber-600 text-white hover:bg-amber-700 dark:bg-amber-600 dark:hover:bg-amber-500 text-sm">
+                        Comenzar
+                    </Button>
+                    <Button v-if="canToggleStatus && ticket.status === 'in_progress'" @click="toggleStatus"
+                        variant="outline"
+                        class="border-amber-500 text-amber-600 dark:border-amber-500/60 dark:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-950/40 text-sm">
+                        Volver a abierto
+                    </Button>
+                    <Button v-if="canAssign && !isTicketClosed" @click="openAssignDialog"
+                        variant="outline"
+                        class="border-gray-300 dark:border-zinc-700 text-gray-700 dark:text-zinc-300 hover:bg-gray-100 dark:hover:bg-zinc-800 text-sm">
+                        Asignar
+                    </Button>
                     <Button v-if="canClose" @click="closeTicket"
                         class="bg-emerald-600 text-white hover:bg-emerald-700 dark:bg-emerald-600 dark:hover:bg-emerald-500 text-sm">
                         Cerrar Ticket
-                    </Button>
-                    <Button variant="outline" as-child
-                        class="border-gray-300 dark:border-zinc-700 text-gray-700 dark:text-zinc-300 hover:bg-gray-100 dark:hover:bg-zinc-800">
-                        <Link :href="route('admin.tickets.index')">Volver al listado</Link>
                     </Button>
                 </div>
             </CardHeader>
@@ -134,7 +233,24 @@ const formatDate = (date) => {
                     </div>
                     <div class="space-y-1">
                         <p class="text-sm font-medium text-gray-500 dark:text-zinc-500">Asignado a</p>
-                        <p class="text-base text-gray-900 dark:text-zinc-100 font-medium">{{ ticket.assignee?.name || 'Sin asignar' }}</p>
+                        <div v-if="ticket.assignee" class="flex items-center gap-2.5">
+                            <span
+                                class="inline-flex items-center justify-center h-8 w-8 rounded-full bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300 text-xs font-semibold shrink-0">
+                                {{ getInitials(ticket.assignee) }}
+                            </span>
+                            <span class="text-base text-gray-900 dark:text-zinc-100 font-medium">
+                                {{ ticket.assignee.name }} {{ ticket.assignee.last_name ?? '' }}
+                            </span>
+                        </div>
+                        <div v-else class="flex items-center gap-2.5">
+                            <span
+                                class="inline-flex items-center justify-center h-8 w-8 rounded-full border border-dashed border-gray-300 dark:border-zinc-700 text-gray-400 dark:text-zinc-600 shrink-0">
+                                <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                                </svg>
+                            </span>
+                            <span class="text-base text-gray-500 dark:text-zinc-500 font-medium">Sin asignar</span>
+                        </div>
                     </div>
                     <div class="space-y-1">
                         <p class="text-sm font-medium text-gray-500 dark:text-zinc-500">Fecha de Solicitud</p>
@@ -242,5 +358,62 @@ const formatDate = (date) => {
                 No hay comentarios aún. Sé el primero en responder.
             </p>
         </div>
+
+        <Dialog v-model:open="dialogOpen">
+            <DialogContent class="sm:max-w-md">
+                <DialogHeader>
+                    <DialogTitle>Asignar solicitud</DialogTitle>
+                    <DialogDescription>
+                        Ticket <span class="font-mono">{{ ticket.uuid }}</span> — selecciona el responsable.
+                    </DialogDescription>
+                </DialogHeader>
+
+                <div class="space-y-4 py-2">
+                    <input v-model="searchQuery" type="search" placeholder="Buscar usuario..."
+                        class="flex w-full rounded-md border border-gray-300 dark:border-zinc-800 bg-white dark:bg-zinc-950 px-3 py-2 text-sm text-gray-900 dark:text-zinc-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 placeholder-gray-400 dark:placeholder-zinc-500" />
+
+                    <div class="max-h-72 overflow-y-auto space-y-1 pr-1">
+                        <button v-for="user in filteredUsers" :key="user.id" type="button" @click="selectedUserId = String(user.id)"
+                            class="w-full flex items-center gap-3 rounded-lg border px-3 py-2.5 text-left transition-colors"
+                            :class="selectedUserId === String(user.id)
+                                ? 'border-emerald-500 bg-emerald-50 dark:border-emerald-500 dark:bg-emerald-950/40'
+                                : 'border-transparent hover:bg-gray-100 dark:hover:bg-zinc-800/60'">
+                            <span
+                                class="inline-flex items-center justify-center h-8 w-8 rounded-full bg-zinc-100 text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300 text-xs font-semibold shrink-0">
+                                {{ getInitials(user) }}
+                            </span>
+                            <span class="flex-1 text-sm font-medium text-gray-900 dark:text-zinc-100">
+                                {{ user.name }} {{ user.last_name ?? '' }}
+                            </span>
+                            <span v-if="selectedUserId === String(user.id)"
+                                class="inline-flex items-center justify-center h-5 w-5 rounded-full bg-emerald-600 text-white shrink-0">
+                                <svg class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7" />
+                                </svg>
+                            </span>
+                        </button>
+
+                        <p v-if="filteredUsers.length === 0" class="text-sm text-gray-400 dark:text-zinc-500 text-center py-6">
+                            No se encontraron usuarios.
+                        </p>
+                    </div>
+
+                    <p v-if="assignForm.errors.assigned_to" class="text-sm text-red-500">{{ assignForm.errors.assigned_to }}</p>
+                </div>
+
+                <DialogFooter class="pt-2">
+                    <Button v-if="ticket.assignee" type="button" variant="ghost" @click="releaseTicket"
+                        class="mr-auto text-gray-500 dark:text-zinc-400 hover:text-red-500 dark:hover:text-red-400">
+                        Liberar
+                    </Button>
+                    <Button type="button" variant="ghost" @click="dialogOpen = false">Cancelar</Button>
+                    <Button type="button" @click="submitAssign"
+                        class="bg-emerald-600 text-white hover:bg-emerald-700 dark:bg-emerald-600 dark:hover:bg-emerald-500"
+                        :disabled="!selectedUserId || assignForm.processing">
+                        {{ assignForm.processing ? 'Asignando...' : 'Asignar' }}
+                    </Button>
+                </DialogFooter>
+            </DialogContent>
+        </Dialog>
     </AuthenticatedLayout>
 </template>

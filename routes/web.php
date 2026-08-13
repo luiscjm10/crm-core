@@ -60,6 +60,9 @@ Route::middleware('auth')->group(function () {
         Route::get('tickets/create', [\App\Http\Controllers\Admin\TicketController::class, 'create'])->name('create');
         Route::post('tickets', [\App\Http\Controllers\Admin\TicketController::class, 'store'])->name('store');
         Route::get('tickets/{ticket}', [\App\Http\Controllers\Admin\TicketController::class, 'show'])->name('show');
+        Route::patch('tickets/{ticket}/assign', [\App\Http\Controllers\Admin\TicketController::class, 'assign'])->name('assign');
+        Route::patch('tickets/{ticket}/take', [\App\Http\Controllers\Admin\TicketController::class, 'take'])->name('take');
+        Route::patch('tickets/{ticket}/status', [\App\Http\Controllers\Admin\TicketController::class, 'updateStatus'])->name('status');
         Route::patch('tickets/{ticket}/close', [\App\Http\Controllers\Admin\TicketController::class, 'close'])->name('close');
         Route::delete('tickets/{ticket}', [\App\Http\Controllers\Admin\TicketController::class, 'destroy'])->name('destroy');
     });
