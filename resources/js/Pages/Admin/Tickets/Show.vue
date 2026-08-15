@@ -4,6 +4,7 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import { Head, Link, router, useForm } from '@inertiajs/vue3';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { formatDateOnly, formatDateTime, formatMinutes } from '@/helpers/date';
 import Swal from 'sweetalert2';
@@ -17,6 +18,9 @@ const props = defineProps({
     canAssign: Boolean,
     canTake: Boolean,
     canToggleStatus: Boolean,
+    canChangeType: Boolean,
+    canReopen: Boolean,
+    companyTicketTypes: Array,
     users: Array,
 });
 
@@ -31,7 +35,12 @@ const assignForm = useForm({
     assigned_to: '',
 });
 
+const typeForm = useForm({
+    ticket_type_id: '',
+});
+
 const dialogOpen = ref(false);
+const typeDialogOpen = ref(false);
 const searchQuery = ref('');
 const selectedUserId = ref('');
 
@@ -56,6 +65,23 @@ const openAssignDialog = () => {
     selectedUserId.value = props.ticket.assignee?.id ? String(props.ticket.assignee.id) : '';
     assignForm.clearErrors();
     dialogOpen.value = true;
+};
+
+const openTypeDialog = () => {
+    typeForm.ticket_type_id = props.ticket.ticket_type?.id ? String(props.ticket.ticket_type.id) : '';
+    typeForm.clearErrors();
+    typeDialogOpen.value = true;
+};
+
+const submitType = () => {
+    if (!typeForm.ticket_type_id || typeForm.ticket_type_id === String(props.ticket.ticket_type?.id)) return;
+
+    typeForm.patch(route('admin.tickets.type', props.ticket.uuid), {
+        preserveScroll: true,
+        onSuccess: () => {
+            typeDialogOpen.value = false;
+        },
+    });
 };
 
 const submitComment = () => {
@@ -131,6 +157,23 @@ const closeTicket = () => {
     });
 };
 
+const reopenTicket = () => {
+    Swal.fire({
+        title: '¿Reabrir solicitud?',
+        text: 'La solicitud volverá al estado Abierto.',
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonText: 'Sí, reabrir',
+        cancelButtonText: 'Cancelar',
+        confirmButtonColor: '#10b981',
+        zIndex: 1100,
+    }).then((result) => {
+        if (result.isConfirmed) {
+            router.patch(route('admin.tickets.reopen', props.ticket.uuid));
+        }
+    });
+};
+
 const statusLabels = {
     open: 'Abierto',
     in_progress: 'En progreso',
@@ -200,9 +243,19 @@ const formatDate = (date) => {
                         class="border-gray-300 dark:border-zinc-700 text-gray-700 dark:text-zinc-300 hover:bg-gray-100 dark:hover:bg-zinc-800 text-sm">
                         Asignar
                     </Button>
+                    <Button v-if="canChangeType" @click="openTypeDialog"
+                        variant="outline"
+                        class="border-gray-300 dark:border-zinc-700 text-gray-700 dark:text-zinc-300 hover:bg-gray-100 dark:hover:bg-zinc-800 text-sm">
+                        Cambiar tipo
+                    </Button>
                     <Button v-if="canClose" @click="closeTicket"
                         class="bg-emerald-600 text-white hover:bg-emerald-700 dark:bg-emerald-600 dark:hover:bg-emerald-500 text-sm">
                         Cerrar Ticket
+                    </Button>
+                    <Button v-if="isTicketClosed && canReopen" @click="reopenTicket"
+                        variant="outline"
+                        class="border-emerald-500 text-emerald-600 dark:border-emerald-500/60 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-950/40 text-sm">
+                        Reabrir
                     </Button>
                 </div>
             </CardHeader>
@@ -411,6 +464,40 @@ const formatDate = (date) => {
                         class="bg-emerald-600 text-white hover:bg-emerald-700 dark:bg-emerald-600 dark:hover:bg-emerald-500"
                         :disabled="!selectedUserId || assignForm.processing">
                         {{ assignForm.processing ? 'Asignando...' : 'Asignar' }}
+                    </Button>
+                </DialogFooter>
+            </DialogContent>
+        </Dialog>
+
+        <Dialog v-model:open="typeDialogOpen">
+            <DialogContent class="sm:max-w-md">
+                <DialogHeader>
+                    <DialogTitle>Cambiar tipo de solicitud</DialogTitle>
+                    <DialogDescription>
+                        Ticket <span class="font-mono">{{ ticket.uuid }}</span> — selecciona el nuevo tipo.
+                    </DialogDescription>
+                </DialogHeader>
+
+                <div class="space-y-4 py-2">
+                    <div class="space-y-2">
+                        <Label for="ticket_type_id">Tipo actual: <span class="font-medium text-gray-900 dark:text-zinc-100">{{ ticket.ticket_type?.name || '—' }}</span></Label>
+                        <select id="ticket_type_id" v-model="typeForm.ticket_type_id"
+                            class="flex w-full rounded-md border border-gray-300 dark:border-zinc-800 bg-white dark:bg-zinc-950 px-3 py-2 text-sm text-gray-900 dark:text-zinc-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500">
+                            <option value="">Seleccionar tipo...</option>
+                            <option v-for="type in companyTicketTypes" :key="type.id" :value="type.id" :disabled="String(type.id) === String(ticket.ticket_type?.id)">
+                                {{ type.name }}
+                            </option>
+                        </select>
+                        <p v-if="typeForm.errors.ticket_type_id" class="text-sm text-red-500">{{ typeForm.errors.ticket_type_id }}</p>
+                    </div>
+                </div>
+
+                <DialogFooter class="pt-2">
+                    <Button type="button" variant="ghost" @click="typeDialogOpen = false">Cancelar</Button>
+                    <Button type="button" @click="submitType"
+                        class="bg-emerald-600 text-white hover:bg-emerald-700 dark:bg-emerald-600 dark:hover:bg-emerald-500"
+                        :disabled="!typeForm.ticket_type_id || typeForm.ticket_type_id === String(ticket.ticket_type?.id) || typeForm.processing">
+                        {{ typeForm.processing ? 'Guardando...' : 'Cambiar tipo' }}
                     </Button>
                 </DialogFooter>
             </DialogContent>

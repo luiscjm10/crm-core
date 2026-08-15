@@ -8,7 +8,10 @@ use App\Domains\Notifications\Events\TicketCreated;
 use App\Domains\Tickets\Actions\CloseTicketAction;
 use App\Domains\Tickets\Actions\CreateTicketAction;
 use App\Domains\Tickets\Actions\AssignTicketAction;
+use App\Domains\Tickets\Actions\TakeTicketAction;
 use App\Domains\Tickets\Actions\UpdateTicketStatusAction;
+use App\Domains\Tickets\Actions\UpdateTicketTypeAction;
+use App\Domains\Tickets\Actions\ReopenTicketAction;
 use App\Domains\Clients\Company;
 use App\Domains\Tickets\Actions\ExportTicketsAction;
 use App\Domains\Tickets\Ticket;
@@ -200,6 +203,19 @@ class TicketController extends Controller
         $canToggleStatus = ($ticket->status === 'open' || $ticket->status === 'in_progress')
             && ($user->hasRole('super-admin') || $user->id === $ticket->assigned_to);
 
+        $canChangeType = $ticket->status !== 'closed'
+            && ($user->hasRole('super-admin') || $user->can('tickets.change-type'));
+
+        $canReopen = $ticket->status === 'closed'
+            && ($user->hasRole('super-admin') || $user->can('tickets.reopen'));
+
+        $companyTicketTypes = $ticket->company
+            ? $ticket->company->ticketTypes()
+                ->where('is_active', true)
+                ->orderBy('name')
+                ->get(['id', 'name'])
+            : collect();
+
         $users = $ticket->company
             ? User::whereHas('companies', fn($q) => $q->whereKey($ticket->company_id))
                 ->orderBy('name')
@@ -215,6 +231,9 @@ class TicketController extends Controller
             'canAssign' => $canAssign,
             'canTake' => $canTake,
             'canToggleStatus' => $canToggleStatus,
+            'canChangeType' => $canChangeType,
+            'canReopen' => $canReopen,
+            'companyTicketTypes' => $companyTicketTypes,
             'users' => $users,
         ]);
     }
@@ -260,7 +279,7 @@ class TicketController extends Controller
         return redirect()->back()->with('success', $message);
     }
 
-    public function take(Request $request, Ticket $ticket, AssignTicketAction $assignTicket)
+    public function take(Request $request, Ticket $ticket, TakeTicketAction $takeTicket)
     {
         $user = $request->user();
 
@@ -270,7 +289,7 @@ class TicketController extends Controller
 
         abort_if($ticket->assigned_to !== null, 422, 'Este ticket ya tiene un responsable asignado.');
 
-        $ticket = $assignTicket->execute($ticket, $user->id);
+        $ticket = $takeTicket->execute($ticket, $user);
 
         event(new TicketAssigned($ticket, $user, $ticket->assignee));
 
@@ -296,6 +315,51 @@ class TicketController extends Controller
             : 'Solicitud abierta de nuevo.';
 
         return redirect()->back()->with('success', $message);
+    }
+
+    public function updateType(Request $request, Ticket $ticket, UpdateTicketTypeAction $updateType)
+    {
+        $user = $request->user();
+
+        abort_unless($user->hasRole('super-admin') || $user->can('tickets.change-type'), 403, 'No tienes permiso para cambiar el tipo de solicitud.');
+
+        abort_if($ticket->status === 'closed', 422, 'No se puede cambiar el tipo de una solicitud cerrada.');
+
+        $validated = $request->validate([
+            'ticket_type_id' => [
+                'required',
+                'exists:ticket_types,id',
+                function ($attribute, $value, $fail) use ($ticket) {
+                    $exists = \DB::table('company_ticket_type')
+                        ->where('company_id', $ticket->company_id)
+                        ->where('ticket_type_id', $value)
+                        ->exists();
+
+                    if (!$exists) {
+                        $fail('El tipo de solicitud seleccionado no está disponible para esta compañía.');
+                    }
+                },
+            ],
+        ]);
+
+        $oldName = $ticket->ticketType?->name;
+
+        $ticket = $updateType->execute($ticket, (int) $validated['ticket_type_id'], $user);
+
+        return redirect()->back()->with('success', 'Tipo de solicitud actualizado de «' . $oldName . '» a «' . $ticket->ticketType->name . '».');
+    }
+
+    public function reopen(Request $request, Ticket $ticket, ReopenTicketAction $reopenTicket)
+    {
+        $user = $request->user();
+
+        abort_unless($user->hasRole('super-admin') || $user->can('tickets.reopen'), 403, 'No tienes permiso para reabrir solicitudes.');
+
+        abort_if($ticket->status !== 'closed', 422, 'Solo se pueden reabrir solicitudes cerradas.');
+
+        $reopenTicket->execute($ticket, $user);
+
+        return redirect()->back()->with('success', 'Solicitud reabierta correctamente.');
     }
 
     public function close(Request $request, Ticket $ticket, CloseTicketAction $closeTicket)
