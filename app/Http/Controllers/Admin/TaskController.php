@@ -31,8 +31,10 @@ class TaskController extends Controller
     {
         $perPage = in_array($request->input('perPage'), [10, 20, 50, 100]) ? (int) $request->input('perPage') : 10;
         $companyId = $request->get('company_id');
+        $user = $request->user();
 
-        $tasks = Task::with('assignedUser', 'creator', 'company', 'taskType');
+        $tasks = Task::with('assignedUser', 'creator', 'company', 'taskType')
+            ->visibleTo($user);
 
         if ($companyId && $companyId !== 'all') {
             $tasks->where('company_id', $companyId);
@@ -59,6 +61,7 @@ class TaskController extends Controller
             'taskTypes' => TaskType::where('is_active', true)->orderBy('name')->get(),
             'priorities' => TaskPriority::values(),
             'company' => $company,
+            'canAssign' => $request->user()->hasRole('super-admin') || $request->user()->can('tasks.assign'),
         ]);
     }
 
@@ -80,6 +83,11 @@ class TaskController extends Controller
 
         $validated['company_id'] = $company->id;
 
+        $user = $request->user();
+        if (!$user->hasRole('super-admin') && !$user->can('tasks.assign')) {
+            $validated['assigned_user_id'] = $user->id;
+        }
+
         $createTask->execute($validated);
 
         return redirect()->route('admin.tasks.index', ['company_id' => $company->id]);
@@ -87,6 +95,12 @@ class TaskController extends Controller
 
     public function show(Request $request, Company $company, Task $task)
     {
+        abort_unless(
+            Task::query()->visibleTo($request->user())->whereKey($task->id)->exists(),
+            403,
+            'No tienes acceso a esta tarea.'
+        );
+
         $task->load('assignedUser', 'creator', 'taskable');
 
         return Inertia::render('Admin/Tasks/Show', [
@@ -97,6 +111,12 @@ class TaskController extends Controller
 
     public function edit(Request $request, Company $company, Task $task)
     {
+        abort_unless(
+            Task::query()->visibleTo($request->user())->whereKey($task->id)->exists(),
+            403,
+            'No tienes acceso a esta tarea.'
+        );
+
         $task->load('assignedUser', 'creator');
 
         return Inertia::render('Admin/Tasks/Edit', [
@@ -106,11 +126,18 @@ class TaskController extends Controller
             'taskTypes' => TaskType::where('is_active', true)->orderBy('name')->get(),
             'priorities' => TaskPriority::values(),
             'company' => $company,
+            'canAssign' => $request->user()->hasRole('super-admin') || $request->user()->can('tasks.assign'),
         ]);
     }
 
     public function update(Request $request, Company $company, Task $task, UpdateTaskAction $updateTask)
     {
+        abort_unless(
+            Task::query()->visibleTo($request->user())->whereKey($task->id)->exists(),
+            403,
+            'No tienes acceso a esta tarea.'
+        );
+
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'description' => 'nullable|string',
@@ -125,6 +152,11 @@ class TaskController extends Controller
             'priority' => 'nullable|string|in:' . implode(',', TaskPriority::values()),
         ]);
 
+        $user = $request->user();
+        if (!$user->hasRole('super-admin') && !$user->can('tasks.assign')) {
+            unset($validated['assigned_user_id']);
+        }
+
         $updateTask->execute($task, $validated);
 
         return redirect()->route('admin.tasks.index', ['company_id' => $company->id]);
@@ -132,6 +164,12 @@ class TaskController extends Controller
 
     public function destroy(Request $request, Company $company, Task $task, DeleteTaskAction $deleteTask)
     {
+        abort_unless(
+            Task::query()->visibleTo($request->user())->whereKey($task->id)->exists(),
+            403,
+            'No tienes acceso a esta tarea.'
+        );
+
         $deleteTask->execute($task);
 
         return redirect()->route('admin.tasks.index', ['company_id' => $company->id]);
@@ -139,6 +177,12 @@ class TaskController extends Controller
 
     public function complete(Request $request, Company $company, Task $task, CompleteTaskAction $completeTask)
     {
+        abort_unless(
+            Task::query()->visibleTo($request->user())->whereKey($task->id)->exists(),
+            403,
+            'No tienes acceso a esta tarea.'
+        );
+
         $completeTask->execute($task);
 
         return redirect()->route('admin.tasks.index', ['company_id' => $company->id]);
@@ -152,6 +196,7 @@ class TaskController extends Controller
             'taskTypes' => TaskType::where('is_active', true)->orderBy('name')->get(),
             'priorities' => TaskPriority::values(),
             'companies' => Company::select('id', 'name')->where('is_active', true)->get(),
+            'canAssign' => request()->user()->hasRole('super-admin') || request()->user()->can('tasks.assign'),
         ]);
     }
 
@@ -171,6 +216,11 @@ class TaskController extends Controller
             'priority' => 'nullable|string|in:' . implode(',', TaskPriority::values()),
             'company_id' => 'required|exists:companies,id',
         ]);
+
+        $user = $request->user();
+        if (!$user->hasRole('super-admin') && !$user->can('tasks.assign')) {
+            $validated['assigned_user_id'] = $user->id;
+        }
 
         $createTask->execute($validated);
 

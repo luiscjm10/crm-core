@@ -66,6 +66,18 @@ class Task extends Model
         return $this->belongsTo(TaskType::class);
     }
 
+    public function scopeVisibleTo(Builder $query, User $user): Builder
+    {
+        if ($user->hasRole('super-admin') || $user->can('tasks.view-all')) {
+            return $query;
+        }
+
+        return $query->where(function (Builder $q) use ($user) {
+            $q->where('assigned_user_id', $user->id)
+                ->orWhere('creator_id', $user->id);
+        });
+    }
+
     public function scopeStatus(Builder $query, TaskStatus $status): Builder
     {
         return $query->where('status', $status->value);

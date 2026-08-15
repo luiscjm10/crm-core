@@ -32,6 +32,8 @@ class RoleAndAdminSeeder extends Seeder
             ['name' => 'tasks.update',     'description' => 'Editar tareas existentes',              'group' => 4],
             ['name' => 'tasks.delete',     'description' => 'Eliminar tareas del sistema',           'group' => 4],
             ['name' => 'tasks.complete',   'description' => 'Marcar tareas como completadas',        'group' => 4],
+            ['name' => 'tasks.view-all',   'description' => 'Ver todas las tareas del sistema',      'group' => 4],
+            ['name' => 'tasks.assign',     'description' => 'Asignar responsable a tareas',          'group' => 4],
             ['name' => 'tickets.create',   'description' => 'Crear nuevas solicitudes',              'group' => 5],
             ['name' => 'tickets.read',     'description' => 'Ver listado y detalle de solicitudes',   'group' => 5],
             ['name' => 'tickets.update',   'description' => 'Editar solicitudes existentes',          'group' => 5],

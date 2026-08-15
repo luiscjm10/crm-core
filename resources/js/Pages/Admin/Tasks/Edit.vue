@@ -14,6 +14,7 @@ const props = defineProps({
     taskTypes: Array,
     priorities: Array,
     company: Object,
+    canAssign: Boolean,
 });
 
 const statusLabels = {
@@ -123,11 +124,14 @@ const submit = () => {
 
                         <div class="space-y-2">
                             <Label for="assigned_user_id">Responsable</Label>
-                            <select id="assigned_user_id" v-model="form.assigned_user_id"
+                            <select v-if="canAssign" id="assigned_user_id" v-model="form.assigned_user_id"
                                 class="flex w-full rounded-md border border-gray-300 dark:border-zinc-800 bg-white dark:bg-zinc-950 px-3 py-2 text-sm text-gray-900 dark:text-zinc-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500">
                                 <option value="">Sin asignar...</option>
                                 <option v-for="user in users" :key="user.id" :value="user.id">{{ user.name }}</option>
                             </select>
+                            <p v-else class="flex w-full rounded-md border border-gray-200 dark:border-zinc-800 bg-gray-50 dark:bg-zinc-900 px-3 py-2 text-sm text-gray-500 dark:text-zinc-400">
+                                {{ task.assigned_user?.name || 'Sin asignar' }}
+                            </p>
                             <p class="text-sm text-red-500" v-if="form.errors.assigned_user_id">{{ form.errors.assigned_user_id }}</p>
                         </div>
 
