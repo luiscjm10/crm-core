@@ -11,28 +11,7 @@ class DashboardController extends Controller
     public function index(Request $request)
     {
         $user = $request->user();
-        $query = Ticket::query();
-
-        if ($user->hasRole('super-admin')) {
-        } elseif ($user->can('tickets.view-all')) {
-            $companyIds = $user->companies()->pluck('companies.id')->toArray();
-            if ($user->company_id) {
-                $companyIds[] = $user->company_id;
-            }
-            $companyIds = array_unique($companyIds);
-            $query->where(function ($q) use ($user, $companyIds) {
-                if (!empty($companyIds)) {
-                    $q->whereIn('company_id', $companyIds);
-                }
-                $q->orWhere('creator_id', $user->id)
-                  ->orWhere('requester_id', $user->id);
-            });
-        } else {
-            $query->where(function ($q) use ($user) {
-                $q->where('creator_id', $user->id)
-                  ->orWhere('requester_id', $user->id);
-            });
-        }
+        $query = Ticket::query()->visibleTo($user);
 
         $query->whereBetween('created_at', [now()->startOfMonth(), now()->endOfMonth()]);
 

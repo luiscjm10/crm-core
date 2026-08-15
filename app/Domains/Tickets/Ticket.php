@@ -5,6 +5,7 @@ namespace App\Domains\Tickets;
 use App\Domains\Clients\Company;
 use App\Models\User;
 use App\Traits\HasComments;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -85,5 +86,47 @@ class Ticket extends Model
     public function assignee(): BelongsTo
     {
         return $this->belongsTo(User::class, 'assigned_to');
+    }
+
+    public function scopeVisibleTo(Builder $query, User $user): Builder
+    {
+        $allowed = $user->ticketTypes()->pluck('ticket_type_id');
+
+        if ($allowed->isNotEmpty()) {
+            $query->where(function (Builder $typeQuery) use ($allowed, $user) {
+                $typeQuery->whereIn('ticket_type_id', $allowed)
+                    ->orWhere('assigned_to', $user->id);
+            });
+        }
+
+        if ($user->hasRole('super-admin')) {
+            return $query;
+        }
+
+        if ($user->can('tickets.view-all')) {
+            $companyIds = $user->companies()->pluck('companies.id')->toArray();
+            if ($user->company_id) {
+                $companyIds[] = $user->company_id;
+            }
+            $companyIds = array_unique($companyIds);
+
+            $query->where(function (Builder $q) use ($user, $companyIds) {
+                if (!empty($companyIds)) {
+                    $q->whereIn('company_id', $companyIds);
+                }
+                $q->orWhere('creator_id', $user->id)
+                    ->orWhere('requester_id', $user->id);
+            });
+
+            return $query;
+        }
+
+        $query->where(function (Builder $q) use ($user) {
+            $q->where('creator_id', $user->id)
+                ->orWhere('requester_id', $user->id)
+                ->orWhere('assigned_to', $user->id);
+        });
+
+        return $query;
     }
 }

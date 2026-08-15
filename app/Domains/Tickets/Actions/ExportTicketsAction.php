@@ -26,28 +26,8 @@ class ExportTicketsAction
 
         $user = $request->user();
         $query = Ticket::with('company', 'ticketType', 'creator', 'requester', 'assignee')
-            ->with('comments', fn ($q) => $q->reorder()->oldest()->with('user'));
-
-        if ($user->hasRole('super-admin')) {
-        } elseif ($user->can('tickets.view-all')) {
-            $companyIds = $user->companies()->pluck('companies.id')->toArray();
-            if ($user->company_id) {
-                $companyIds[] = $user->company_id;
-            }
-            $companyIds = array_unique($companyIds);
-            $query->where(function ($q) use ($user, $companyIds) {
-                if (!empty($companyIds)) {
-                    $q->whereIn('company_id', $companyIds);
-                }
-                $q->orWhere('creator_id', $user->id)
-                  ->orWhere('requester_id', $user->id);
-            });
-        } else {
-            $query->where(function ($q) use ($user) {
-                $q->where('creator_id', $user->id)
-                  ->orWhere('requester_id', $user->id);
-            });
-        }
+            ->with('comments', fn ($q) => $q->reorder()->oldest()->with('user'))
+            ->visibleTo($user);
 
         if ($search = $filters['search']) {
             $query->where(function ($q) use ($search) {

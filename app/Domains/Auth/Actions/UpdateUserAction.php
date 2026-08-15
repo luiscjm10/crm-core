@@ -8,7 +8,7 @@ use Spatie\Permission\Models\Role;
 
 class UpdateUserAction
 {
-    public function execute(User $user, array $data, ?string $roleName = null, array $companyIds = []): User
+    public function execute(User $user, array $data, ?string $roleName = null, array $companyIds = [], array $ticketTypeIds = []): User
     {
         $fillable = [
             'name' => $data['name'],
@@ -24,6 +24,8 @@ class UpdateUserAction
         $user->update($fillable);
 
         $user->companies()->sync($companyIds);
+
+        $user->ticketTypes()->sync($ticketTypeIds);
 
         if ($roleName) {
             $role = Role::findByName($roleName, 'web');

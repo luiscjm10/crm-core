@@ -8,6 +8,7 @@ use App\Domains\Auth\Actions\CreateUserAction;
 use App\Domains\Auth\Actions\UpdateUserAction;
 use App\Domains\Auth\Actions\DeleteUserAction;
 use App\Domains\Clients\Company;
+use App\Domains\Tickets\TicketType;
 use Spatie\Permission\Models\Role;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -38,6 +39,7 @@ class UserController extends Controller
         return Inertia::render('Admin/Users/Create', [
             'roles' => Role::all(),
             'companies' => Company::all(),
+            'ticketTypes' => TicketType::where('is_active', true)->orderBy('name')->get(['id', 'name']),
         ]);
     }
 
@@ -52,9 +54,11 @@ class UserController extends Controller
             'role' => 'nullable|exists:roles,name',
             'company_ids' => 'nullable|array',
             'company_ids.*' => 'exists:companies,id',
+            'ticket_type_ids' => 'nullable|array',
+            'ticket_type_ids.*' => 'exists:ticket_types,id',
         ]);
 
-        $createUser->execute($validated, $validated['role'] ?? null, $validated['company_ids'] ?? []);
+        $createUser->execute($validated, $validated['role'] ?? null, $validated['company_ids'] ?? [], $validated['ticket_type_ids'] ?? []);
 
         return redirect()->route('admin.users.index');
     }
@@ -70,12 +74,13 @@ class UserController extends Controller
 
     public function edit(User $user)
     {
-        $user->load('roles', 'companies');
+        $user->load('roles', 'companies', 'ticketTypes');
 
         return Inertia::render('Admin/Users/Edit', [
             'user' => $user,
             'roles' => Role::all(),
             'companies' => Company::all(),
+            'ticketTypes' => TicketType::where('is_active', true)->orderBy('name')->get(['id', 'name']),
         ]);
     }
 
@@ -90,9 +95,11 @@ class UserController extends Controller
             'role' => 'nullable|exists:roles,name',
             'company_ids' => 'nullable|array',
             'company_ids.*' => 'exists:companies,id',
+            'ticket_type_ids' => 'nullable|array',
+            'ticket_type_ids.*' => 'exists:ticket_types,id',
         ]);
 
-        $updateUser->execute($user, $validated, $validated['role'] ?? null, $validated['company_ids'] ?? []);
+        $updateUser->execute($user, $validated, $validated['role'] ?? null, $validated['company_ids'] ?? [], $validated['ticket_type_ids'] ?? []);
 
         return redirect()->route('admin.users.index');
     }

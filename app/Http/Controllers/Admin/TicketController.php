@@ -46,32 +46,8 @@ class TicketController extends Controller
 
         $user = $request->user();
         $query = Ticket::with('company', 'ticketType', 'creator', 'requester', 'assignee')
-            ->withSum('comments', 'time_spent_minutes');
-
-        if ($user->hasRole('super-admin')) {
-            // Nivel 1: todo el sistema, sin filtro
-        } elseif ($user->can('tickets.view-all')) {
-            // Nivel 2: compañías asignadas + propias
-            $companyIds = $user->companies()->pluck('companies.id')->toArray();
-            if ($user->company_id) {
-                $companyIds[] = $user->company_id;
-            }
-            $companyIds = array_unique($companyIds);
-
-            $query->where(function ($q) use ($user, $companyIds) {
-                if (!empty($companyIds)) {
-                    $q->whereIn('company_id', $companyIds);
-                }
-                $q->orWhere('creator_id', $user->id)
-                  ->orWhere('requester_id', $user->id);
-            });
-        } else {
-            // Nivel 3: solo solicitudes propias
-            $query->where(function ($q) use ($user) {
-                $q->where('creator_id', $user->id)
-                  ->orWhere('requester_id', $user->id);
-            });
-        }
+            ->withSum('comments', 'time_spent_minutes')
+            ->visibleTo($user);
 
         if ($search = $filters['search']) {
             $query->where(function ($q) use ($search) {
@@ -158,6 +134,13 @@ class TicketController extends Controller
                         $fail('El tipo de solicitud seleccionado no está disponible para esta compañía.');
                     }
                 },
+                function ($attribute, $value, $fail) use ($request) {
+                    $allowed = $request->user()->ticketTypes()->pluck('ticket_type_id');
+
+                    if ($allowed->isNotEmpty() && !$allowed->contains($value)) {
+                        $fail('No tienes permitido crear solicitudes de este tipo.');
+                    }
+                },
             ],
             'description' => 'required|string|max:5000',
             'requester_id' => 'nullable|exists:users,id',
@@ -181,12 +164,19 @@ class TicketController extends Controller
 
     public function show(Request $request, Ticket $ticket)
     {
+        $user = $request->user();
+
+        abort_unless(
+            Ticket::query()->visibleTo($user)->whereKey($ticket->id)->exists(),
+            403,
+            'No tienes acceso a esta solicitud.'
+        );
+
         $ticket->load([
             'company', 'ticketType', 'creator', 'requester', 'assignee',
             'comments' => fn($q) => $q->reorder()->oldest()->with('user'),
         ]);
 
-        $user = $request->user();
         $canClose = $ticket->status !== 'closed'
             && ($user->hasRole('super-admin')
                 || $user->id === $ticket->creator_id

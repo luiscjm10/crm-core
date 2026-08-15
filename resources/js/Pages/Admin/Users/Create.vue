@@ -9,6 +9,7 @@ import { Label } from '@/components/ui/label';
 defineProps({
     roles: Array,
     companies: Array,
+    ticketTypes: Array,
 });
 
 const form = useForm({
@@ -20,6 +21,7 @@ const form = useForm({
     role: '',
     company_id: '',
     company_ids: [],
+    ticket_type_ids: [],
 });
 
 const submit = () => {
@@ -107,6 +109,18 @@ const submit = () => {
                                 <input :id="'create_company_' + company.id" type="checkbox" :value="company.id" v-model="form.company_ids"
                                     class="rounded border-gray-300 dark:border-zinc-800 text-emerald-600 focus:ring-emerald-500 dark:bg-zinc-950" />
                                 <Label :for="'create_company_' + company.id" class="cursor-pointer text-sm font-normal">{{ company.name }}</Label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="space-y-2">
+                        <Label>Tipos de solicitud que puede atender</Label>
+                        <p class="text-xs text-gray-500 dark:text-zinc-400">Si no seleccionas ningún tipo, el usuario podrá ver todas las solicitudes.</p>
+                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 border border-gray-200 dark:border-zinc-800 rounded-md p-3 max-h-48 overflow-y-auto">
+                            <div v-for="type in ticketTypes" :key="type.id" class="flex items-center gap-2">
+                                <input :id="'create_ticket_type_' + type.id" type="checkbox" :value="type.id" v-model="form.ticket_type_ids"
+                                    class="rounded border-gray-300 dark:border-zinc-800 text-emerald-600 focus:ring-emerald-500 dark:bg-zinc-950" />
+                                <Label :for="'create_ticket_type_' + type.id" class="cursor-pointer text-sm font-normal">{{ type.name }}</Label>
                             </div>
                         </div>
                     </div>
