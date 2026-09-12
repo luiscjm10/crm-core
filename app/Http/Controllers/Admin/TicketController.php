@@ -34,18 +34,30 @@ class TicketController extends Controller
     {
         $perPage = in_array($request->input('perPage'), [10, 20, 50, 100]) ? (int) $request->input('perPage') : 10;
 
-        $sort = in_array($request->input('sort'), ['status', 'requested_at', 'created_at', 'updated_at', 'ticket_type'])
-            ? $request->input('sort') : 'requested_at';
+        $dateField = in_array($request->get('date_field'), ['requested_at', 'executed_at'])
+            ? $request->get('date_field') : 'requested_at';
+
+        $sort = in_array($request->input('sort'), ['status', 'requested_at', 'created_at', 'updated_at', 'executed_at', 'ticket_type'])
+            ? $request->input('sort') : $dateField;
         $direction = in_array($request->input('direction'), ['asc', 'desc'])
             ? $request->input('direction') : 'desc';
+
+        $fromDashboard = $request->get('from') === 'dashboard';
 
         $filters = [
             'search' => $request->get('search'),
             'status' => $request->get('status'),
             'ticket_type_id' => $request->get('ticket_type_id'),
-            'date_from' => $request->get('date_from', now()->startOfMonth()->format('Y-m-d')),
-            'date_to' => $request->get('date_to', now()->endOfMonth()->format('Y-m-d')),
+            'date_field' => $dateField,
+            'from' => $fromDashboard ? 'dashboard' : null,
+            'date_from' => $request->get('date_from'),
+            'date_to' => $request->get('date_to'),
         ];
+
+        if (! $fromDashboard && ! $request->has('date_from') && ! $request->has('date_to')) {
+            $filters['date_from'] = now()->startOfMonth()->format('Y-m-d');
+            $filters['date_to'] = now()->endOfMonth()->format('Y-m-d');
+        }
 
         $user = $request->user();
         $query = Ticket::with('company', 'ticketType', 'creator', 'requester', 'assignee')
@@ -67,10 +79,12 @@ class TicketController extends Controller
             $query->where('ticket_type_id', $ticketTypeId);
         }
 
-        $query->whereBetween('requested_at', [
-            $filters['date_from'] . ' 00:00:00',
-            $filters['date_to'] . ' 23:59:59',
-        ]);
+        if ($filters['date_from'] && $filters['date_to']) {
+            $query->whereBetween($dateField, [
+                $filters['date_from'] . ' 00:00:00',
+                $filters['date_to'] . ' 23:59:59',
+            ]);
+        }
 
         if ($sort === 'ticket_type') {
             $query->leftJoin('ticket_types', 'tickets.ticket_type_id', '=', 'ticket_types.id')
@@ -87,6 +101,8 @@ class TicketController extends Controller
             'search' => $filters['search'],
             'status' => $filters['status'],
             'ticket_type_id' => $filters['ticket_type_id'],
+            'date_field' => $filters['date_field'],
+            'from' => $filters['from'] ? 'dashboard' : null,
             'date_from' => $filters['date_from'],
             'date_to' => $filters['date_to'],
         ]);

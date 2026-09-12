@@ -25,6 +25,7 @@ class Ticket extends Model
         'description',
         'requested_at',
         'closed_at',
+        'executed_at',
     ];
 
     protected $appends = [
@@ -37,6 +38,7 @@ class Ticket extends Model
         return [
             'requested_at' => 'datetime',
             'closed_at' => 'datetime',
+            'executed_at' => 'datetime',
         ];
     }
 

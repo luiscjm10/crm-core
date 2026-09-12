@@ -17,18 +17,12 @@ const props = defineProps({
     ticketTypes: { type: Array, default: () => [] },
 });
 
-const today = new Date();
-const firstOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
-const lastOfMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0);
-
-const pad = (n) => String(n).padStart(2, '0');
-const formatDateInput = (d) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
-
 const search = ref(props.filters?.search ?? '');
 const status = ref(props.filters?.status ?? '');
 const ticketTypeId = ref(props.filters?.ticket_type_id ?? '');
-const dateFrom = ref(props.filters?.date_from ?? formatDateInput(firstOfMonth));
-const dateTo = ref(props.filters?.date_to ?? formatDateInput(lastOfMonth));
+const dateField = ref(props.filters?.date_field ?? 'requested_at');
+const dateFrom = ref(props.filters?.date_from ?? '');
+const dateTo = ref(props.filters?.date_to ?? '');
 
 const perPage = ref(props.tickets?.per_page ?? 10);
 const isDark = useDark();
@@ -42,6 +36,8 @@ const exportUrl = computed(() => {
     if (search.value) params.set('search', search.value);
     if (status.value) params.set('status', status.value);
     if (ticketTypeId.value) params.set('ticket_type_id', ticketTypeId.value);
+    if (dateField.value) params.set('date_field', dateField.value);
+    if (props.filters?.from === 'dashboard') params.set('from', 'dashboard');
     if (dateFrom.value) params.set('date_from', dateFrom.value);
     if (dateTo.value) params.set('date_to', dateTo.value);
     return route('admin.tickets.export') + '?' + params.toString();
@@ -71,6 +67,7 @@ const applyFilters = (overrides = {}) => {
         search: search.value || undefined,
         status: status.value || undefined,
         ticket_type_id: ticketTypeId.value || undefined,
+        date_field: dateField.value,
         date_from: dateFrom.value || undefined,
         date_to: dateTo.value || undefined,
         perPage: perPage.value,
@@ -196,6 +193,14 @@ const deleteTicket = (ticket) => {
                         <input id="date_to" v-model="dateTo" type="date" @change="applyFilters()"
                             class="w-full rounded-md border border-gray-300 dark:border-zinc-800 bg-white dark:bg-zinc-950 px-3 py-2 text-sm text-gray-900 dark:text-zinc-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500" />
                     </div>
+                    <div class="min-w-[170px]">
+                        <label for="date_field" class="block text-xs font-medium text-gray-500 dark:text-zinc-400 mb-1">Período por</label>
+                        <select id="date_field" v-model="dateField" @change="applyFilters()"
+                            class="w-full rounded-md border border-gray-300 dark:border-zinc-800 bg-white dark:bg-zinc-950 px-3 py-2 text-sm text-gray-900 dark:text-zinc-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500">
+                            <option value="requested_at">Fecha de solicitud</option>
+                            <option value="executed_at">Fecha de ejecución</option>
+                        </select>
+                    </div>
                 </div>
                 <Table>
                     <TableHeader>
@@ -217,8 +222,8 @@ const deleteTicket = (ticket) => {
                             <TableHead>Asignado</TableHead>
                             <TableHead
                                 class="cursor-pointer select-none hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors"
-                                @click="sortBy('requested_at')">
-                                Fecha Solicitud<span class="text-xs">{{ sortArrow('requested_at') }}</span>
+                                @click="sortBy(dateField)">
+                                {{ dateField === 'executed_at' ? 'Fecha Ejecución' : 'Fecha Solicitud' }}<span class="text-xs">{{ sortArrow(dateField) }}</span>
                             </TableHead>
                             <TableHead
                                 class="cursor-pointer select-none hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors"
@@ -264,7 +269,7 @@ const deleteTicket = (ticket) => {
                             <TableCell class="text-muted-foreground break-words whitespace-normal">{{
                                 ticket.assignee?.name ||
                                 '—' }}</TableCell>
-                            <TableCell class="text-muted-foreground text-sm">{{ formatDateTime(ticket.requested_at) }}
+                            <TableCell class="text-muted-foreground text-sm">{{ formatDateTime(dateField === 'executed_at' ? ticket.executed_at : ticket.requested_at) }}
                             </TableCell>
                             <TableCell class="text-muted-foreground break-words whitespace-normal text-sm">{{
                                 formatDateTime(ticket.updated_at) }}</TableCell>

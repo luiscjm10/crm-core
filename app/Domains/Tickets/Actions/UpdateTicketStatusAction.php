@@ -20,7 +20,13 @@ class UpdateTicketStatusAction
 
     public function execute(Ticket $ticket, string $status, User $user): Ticket
     {
-        $ticket->update(['status' => $status]);
+        $data = ['status' => $status];
+
+        if ($status === 'in_progress') {
+            $data['executed_at'] = now();
+        }
+
+        $ticket->update($data);
 
         $label = self::STATUS_LABELS[$status] ?? $status;
 

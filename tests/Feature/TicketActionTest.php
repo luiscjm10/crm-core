@@ -140,4 +140,44 @@ class TicketActionTest extends TestCase
             ->patch(route('admin.tickets.reopen', $ticket->uuid))
             ->assertStatus(422);
     }
+
+    public function test_begin_work_sets_executed_at(): void
+    {
+        $user = User::factory()->create();
+
+        $ticket = $this->makeTicket(['status' => 'open', 'assigned_to' => $user->id]);
+
+        $this->actingAs($user)
+            ->patch(route('admin.tickets.status', $ticket->uuid))
+            ->assertRedirect();
+
+        $ticket->refresh();
+        $this->assertSame('in_progress', $ticket->status);
+        $this->assertNotNull($ticket->executed_at);
+    }
+
+    public function test_close_directly_sets_executed_at_when_null(): void
+    {
+        $user = User::factory()->create();
+
+        $ticket = $this->makeTicket([
+            'status' => 'open',
+            'creator_id' => $user->id,
+            'requester_id' => $user->id,
+        ]);
+
+        $this->actingAs($user)
+            ->patch(route('admin.tickets.close', $ticket->uuid))
+            ->assertRedirect();
+
+        $ticket->refresh();
+        $this->assertSame('closed', $ticket->status);
+        $this->assertNotNull($ticket->closed_at);
+        $this->assertNotNull($ticket->executed_at);
+        $this->assertEqualsWithDelta(
+            $ticket->closed_at->getTimestamp(),
+            $ticket->executed_at->getTimestamp(),
+            1
+        );
+    }
 }

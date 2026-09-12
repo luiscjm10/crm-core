@@ -14,7 +14,13 @@ class CloseTicketAction
 
     public function execute(Ticket $ticket, User $user): void
     {
-        $ticket->update(['status' => 'closed', 'closed_at' => now()]);
+        $closedAt = now();
+
+        $ticket->update([
+            'status' => 'closed',
+            'closed_at' => $closedAt,
+            'executed_at' => $ticket->executed_at ?? $closedAt,
+        ]);
 
         $this->addComment->execute(
             $ticket,

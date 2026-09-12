@@ -325,6 +325,14 @@ const formatDate = (date) => {
                         <p class="text-sm font-medium text-gray-500 dark:text-zinc-500">Creado el</p>
                         <p class="text-base text-gray-900 dark:text-zinc-100 font-medium">{{ formatDate(ticket.created_at) }}</p>
                     </div>
+                    <div class="space-y-1">
+                        <p class="text-sm font-medium text-gray-500 dark:text-zinc-500">Actualizado el</p>
+                        <p class="text-base text-gray-900 dark:text-zinc-100 font-medium">{{ formatDate(ticket.updated_at) }}</p>
+                    </div>
+                    <div class="space-y-1">
+                        <p class="text-sm font-medium text-gray-500 dark:text-zinc-500">Ejecutado el</p>
+                        <p class="text-base text-gray-900 dark:text-zinc-100 font-medium">{{ formatDate(ticket.executed_at) }}</p>
+                    </div>
                     <div class="space-y-1 md:col-span-2">
                         <p class="text-sm font-medium text-gray-500 dark:text-zinc-500">Descripción</p>
                         <p class="text-base text-gray-900 dark:text-zinc-100 whitespace-pre-wrap">{{ ticket.description }}</p>
@@ -346,7 +354,7 @@ const formatDate = (date) => {
                         </div>
                         <div v-if="comment.is_system"
                             class="text-xs text-zinc-400 dark:text-zinc-500 text-center py-2 select-none">
-                            {{ comment.content }}
+                            {{ comment.content }} — {{ formatDate(comment.created_at) }}
                         </div>
                         <div v-else
                             class="rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900/50 p-4 shadow-sm">

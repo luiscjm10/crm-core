@@ -16,13 +16,24 @@ class ExportTicketsAction
 {
     public function execute(Request $request): StreamedResponse
     {
+        $dateField = in_array($request->get('date_field'), ['requested_at', 'executed_at'])
+            ? $request->get('date_field') : 'requested_at';
+
+        $fromDashboard = $request->get('from') === 'dashboard';
+
         $filters = [
             'search' => $request->get('search'),
             'status' => $request->get('status'),
             'ticket_type_id' => $request->get('ticket_type_id'),
-            'date_from' => $request->get('date_from', now()->startOfMonth()->format('Y-m-d')),
-            'date_to' => $request->get('date_to', now()->endOfMonth()->format('Y-m-d')),
+            'date_field' => $dateField,
+            'date_from' => $request->get('date_from'),
+            'date_to' => $request->get('date_to'),
         ];
+
+        if (! $fromDashboard && ! $request->has('date_from') && ! $request->has('date_to')) {
+            $filters['date_from'] = now()->startOfMonth()->format('Y-m-d');
+            $filters['date_to'] = now()->endOfMonth()->format('Y-m-d');
+        }
 
         $user = $request->user();
         $query = Ticket::with('company', 'ticketType', 'creator', 'requester', 'assignee')
@@ -44,12 +55,14 @@ class ExportTicketsAction
             $query->where('ticket_type_id', $ticketTypeId);
         }
 
-        $query->whereBetween('requested_at', [
-            $filters['date_from'] . ' 00:00:00',
-            $filters['date_to'] . ' 23:59:59',
-        ]);
+        if ($filters['date_from'] && $filters['date_to']) {
+            $query->whereBetween($dateField, [
+                $filters['date_from'] . ' 00:00:00',
+                $filters['date_to'] . ' 23:59:59',
+            ]);
+        }
 
-        $query->orderBy('requested_at', 'desc');
+        $query->orderBy($dateField, 'desc');
 
         $tickets = $query->get();
 
