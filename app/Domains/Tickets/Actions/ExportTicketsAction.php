@@ -25,6 +25,7 @@ class ExportTicketsAction
             'search' => $request->get('search'),
             'status' => $request->get('status'),
             'ticket_type_id' => $request->get('ticket_type_id'),
+            'assigned_to' => $request->get('assigned_to'),
             'date_field' => $dateField,
             'date_from' => $request->get('date_from'),
             'date_to' => $request->get('date_to'),
@@ -53,6 +54,14 @@ class ExportTicketsAction
 
         if ($ticketTypeId = $filters['ticket_type_id']) {
             $query->where('ticket_type_id', $ticketTypeId);
+        }
+
+        if ($assignedTo = $filters['assigned_to']) {
+            if ($assignedTo === 'none') {
+                $query->whereNull('assigned_to');
+            } else {
+                $query->where('assigned_to', $assignedTo);
+            }
         }
 
         if ($filters['date_from'] && $filters['date_to']) {

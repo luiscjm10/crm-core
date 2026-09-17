@@ -48,6 +48,7 @@ class TicketController extends Controller
             'search' => $request->get('search'),
             'status' => $request->get('status'),
             'ticket_type_id' => $request->get('ticket_type_id'),
+            'assigned_to' => $request->get('assigned_to'),
             'date_field' => $dateField,
             'from' => $fromDashboard ? 'dashboard' : null,
             'date_from' => $request->get('date_from'),
@@ -79,6 +80,14 @@ class TicketController extends Controller
             $query->where('ticket_type_id', $ticketTypeId);
         }
 
+        if ($assignedTo = $filters['assigned_to']) {
+            if ($assignedTo === 'none') {
+                $query->whereNull('tickets.assigned_to');
+            } else {
+                $query->where('tickets.assigned_to', $assignedTo);
+            }
+        }
+
         if ($filters['date_from'] && $filters['date_to']) {
             $query->whereBetween($dateField, [
                 $filters['date_from'] . ' 00:00:00',
@@ -101,18 +110,31 @@ class TicketController extends Controller
             'search' => $filters['search'],
             'status' => $filters['status'],
             'ticket_type_id' => $filters['ticket_type_id'],
+            'assigned_to' => $filters['assigned_to'],
             'date_field' => $filters['date_field'],
             'from' => $filters['from'] ? 'dashboard' : null,
             'date_from' => $filters['date_from'],
             'date_to' => $filters['date_to'],
         ]);
 
+        $assigneeIds = Ticket::query()
+            ->visibleTo($user)
+            ->whereNotNull('assigned_to')
+            ->distinct()
+            ->pluck('assigned_to');
+
+        $assignees = User::whereIn('id', $assigneeIds)
+            ->orderBy('name')
+            ->orderBy('last_name')
+            ->get(['id', 'name', 'last_name']);
+
         return Inertia::render('Admin/Tickets/Index', [
             'tickets' => $tickets,
             'sort' => $sort,
             'direction' => $direction,
             'filters' => $filters,
-            'ticketTypes' => TicketType::where('is_active', true)->get(['id', 'name']),
+            'ticketTypes' => TicketType::where('is_active', true)->orderBy('name')->get(['id', 'name']),
+            'assignees' => $assignees,
         ]);
     }
 

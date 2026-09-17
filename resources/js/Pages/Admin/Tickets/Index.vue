@@ -15,11 +15,13 @@ const props = defineProps({
     direction: { type: String, default: 'desc' },
     filters: { type: Object, default: () => ({}) },
     ticketTypes: { type: Array, default: () => [] },
+    assignees: { type: Array, default: () => [] },
 });
 
 const search = ref(props.filters?.search ?? '');
 const status = ref(props.filters?.status ?? '');
 const ticketTypeId = ref(props.filters?.ticket_type_id ?? '');
+const assignedTo = ref(props.filters?.assigned_to ?? '');
 const dateField = ref(props.filters?.date_field ?? 'requested_at');
 const dateFrom = ref(props.filters?.date_from ?? '');
 const dateTo = ref(props.filters?.date_to ?? '');
@@ -36,6 +38,7 @@ const exportUrl = computed(() => {
     if (search.value) params.set('search', search.value);
     if (status.value) params.set('status', status.value);
     if (ticketTypeId.value) params.set('ticket_type_id', ticketTypeId.value);
+    if (assignedTo.value) params.set('assigned_to', assignedTo.value);
     if (dateField.value) params.set('date_field', dateField.value);
     if (props.filters?.from === 'dashboard') params.set('from', 'dashboard');
     if (dateFrom.value) params.set('date_from', dateFrom.value);
@@ -67,12 +70,17 @@ const applyFilters = (overrides = {}) => {
         search: search.value || undefined,
         status: status.value || undefined,
         ticket_type_id: ticketTypeId.value || undefined,
+        assigned_to: assignedTo.value || undefined,
         date_field: dateField.value,
         date_from: dateFrom.value || undefined,
         date_to: dateTo.value || undefined,
         perPage: perPage.value,
         ...overrides,
     }, { preserveState: true, replace: true });
+};
+
+const reload = () => {
+    applyFilters();
 };
 
 const debouncedSearch = useDebounceFn(() => {
@@ -140,6 +148,10 @@ const deleteTicket = (ticket) => {
             <div class="flex justify-between items-center">
                 <span>Solicitudes</span>
                 <div class="flex gap-2">
+                    <button type="button" @click="reload" :title="'Recargar'" aria-label="Recargar"
+                        class="inline-flex items-center justify-center h-9 w-9 rounded-md border border-gray-300 dark:border-zinc-700 text-gray-700 dark:text-zinc-300 bg-white dark:bg-zinc-950 hover:bg-gray-50 dark:hover:bg-zinc-800 transition-colors">
+                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
+                    </button>
                     <a :href="exportUrl"
                         class="inline-flex items-center h-9 px-4 text-sm font-medium rounded-md border border-gray-300 dark:border-zinc-700 text-gray-700 dark:text-zinc-300 bg-white dark:bg-zinc-950 hover:bg-gray-50 dark:hover:bg-zinc-800 transition-colors">
                         <svg class="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
@@ -181,6 +193,15 @@ const deleteTicket = (ticket) => {
                             class="w-full rounded-md border border-gray-300 dark:border-zinc-800 bg-white dark:bg-zinc-950 px-3 py-2 text-sm text-gray-900 dark:text-zinc-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500">
                             <option value="">Todos</option>
                             <option v-for="tt in ticketTypes" :key="tt.id" :value="tt.id">{{ tt.name }}</option>
+                        </select>
+                    </div>
+                    <div class="min-w-[140px]">
+                        <label for="assigned_to" class="block text-xs font-medium text-gray-500 dark:text-zinc-400 mb-1">Responsable</label>
+                        <select id="assigned_to" v-model="assignedTo" @change="applyFilters()"
+                            class="w-full rounded-md border border-gray-300 dark:border-zinc-800 bg-white dark:bg-zinc-950 px-3 py-2 text-sm text-gray-900 dark:text-zinc-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500">
+                            <option value="">Todos</option>
+                            <option value="none">Sin asignar</option>
+                            <option v-for="a in assignees" :key="a.id" :value="a.id">{{ [a.name, a.last_name].filter(Boolean).join(' ') }}</option>
                         </select>
                     </div>
                     <div class="min-w-[140px]">
