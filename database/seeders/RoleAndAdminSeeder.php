@@ -57,6 +57,7 @@ class RoleAndAdminSeeder extends Seeder
             ['name' => 'tickets.view-resolution-time', 'description' => 'Ver tiempos de resolución e invertido en tickets', 'group' => 5],
             ['name' => 'tickets.change-type', 'description' => 'Cambiar el tipo de una solicitud', 'group' => 5],
             ['name' => 'tickets.reopen', 'description' => 'Reabrir solicitudes cerradas', 'group' => 5],
+            ['name' => 'tickets.view-trends', 'description' => 'Ver gráfico de tendencias de solicitudes', 'group' => 5],
         ];
 
         $permissionNames = [];
