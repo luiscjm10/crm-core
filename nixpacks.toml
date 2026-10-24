@@ -1,8 +1,10 @@
 [phases.setup]
-nixPkgs = ["php84", "php84Packages.composer", "nginx", "nodejs_22"]
+nixpkgsArchive = "da6dc0e7b26060f2f71ce3ef7088fb56ee44fa36"
+nixPkgs = ["php85", "php85Packages.composer", "nginx", "nodejs_22"]
 
 [phases.install]
 cmds = [
+  "php -r 'exit(version_compare(PHP_VERSION, \"8.5.12\", \">=\") ? 0 : 1);' || (echo 'PHP < 8.5.12: vulnerable a PHP2Shell' && php -v && exit 1)",
   "apt-get update && apt-get install -y supervisor",
   "mkdir -p /var/log/nginx /var/cache/nginx /var/log/supervisor",
   "composer install --no-dev --optimize-autoloader --ignore-platform-reqs",
