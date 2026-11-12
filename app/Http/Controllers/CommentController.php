@@ -4,6 +4,9 @@ namespace App\Http\Controllers;
 
 use App\Domains\Notifications\Events\TicketCommented;
 use App\Domains\Shared\Actions\AddCommentAction;
+use App\Domains\Shared\Actions\DeleteCommentAction;
+use App\Domains\Tickets\Ticket;
+use App\Models\Comment;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request;
@@ -48,6 +51,15 @@ class CommentController extends Controller
         if ($model instanceof \App\Domains\Tickets\Ticket) {
             event(new TicketCommented($model, $request->user(), $comment));
         }
+
+        return redirect()->back();
+    }
+
+    public function destroy(Comment $comment, DeleteCommentAction $deleteComment)
+    {
+        abort_if($comment->is_system || $comment->commentable_type !== Ticket::class, 403);
+
+        $deleteComment->execute($comment);
 
         return redirect()->back();
     }
