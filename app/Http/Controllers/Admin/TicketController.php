@@ -264,6 +264,7 @@ class TicketController extends Controller
             'ticket' => $ticket,
             'canClose' => $canClose,
             'canComment' => $canComment,
+            'canDeleteComments' => $user->hasRole('super-admin'),
             'canLogTime' => $canLogTime,
             'canViewResolutionTime' => $canViewResolutionTime,
             'canAssign' => $canAssign,

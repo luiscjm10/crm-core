@@ -47,6 +47,8 @@ Route::middleware('auth')->group(function () {
         Route::get('tasks/create', [\App\Http\Controllers\Admin\TaskController::class, 'createPersonal'])->name('tasks.create');
         Route::post('tasks', [\App\Http\Controllers\Admin\TaskController::class, 'storePersonal'])->name('tasks.store');
         Route::post('comments', [\App\Http\Controllers\CommentController::class, 'store'])->name('comments.store');
+        Route::delete('comments/{comment}', [\App\Http\Controllers\CommentController::class, 'destroy'])
+            ->middleware('role:super-admin')->name('comments.destroy');
         Route::get('ticket-types', [\App\Http\Controllers\Admin\TicketTypeController::class, 'index'])->name('ticket-types.index');
         Route::post('ticket-types', [\App\Http\Controllers\Admin\TicketTypeController::class, 'store'])->name('ticket-types.store');
         Route::put('ticket-types/{ticketType}', [\App\Http\Controllers\Admin\TicketTypeController::class, 'update'])->name('ticket-types.update');

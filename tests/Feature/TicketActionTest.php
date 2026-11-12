@@ -55,6 +55,51 @@ class TicketActionTest extends TestCase
         ], $attributes));
     }
 
+    public function test_super_admin_can_delete_a_comment_and_its_logged_time(): void
+    {
+        $admin = User::factory()->create();
+        $admin->assignRole('super-admin');
+        $ticket = $this->makeTicket(['status' => 'closed']);
+        $comment = $ticket->comments()->create([
+            'user_id' => $admin->id,
+            'content' => 'Comentario incorrecto',
+            'time_spent_minutes' => 30,
+        ]);
+
+        $this->actingAs($admin)->delete(route('admin.comments.destroy', $comment))->assertRedirect();
+
+        $this->assertDatabaseMissing('comments', ['id' => $comment->id]);
+        $this->assertSame(0, $ticket->fresh()->total_time_spent_minutes);
+    }
+
+    public function test_non_admin_cannot_delete_a_comment(): void
+    {
+        $user = User::factory()->create();
+        $user->assignRole('read-only');
+        $ticket = $this->makeTicket();
+        $comment = $ticket->comments()->create(['user_id' => $user->id, 'content' => 'Comentario']);
+
+        $this->actingAs($user)->delete(route('admin.comments.destroy', $comment))->assertForbidden();
+
+        $this->assertDatabaseHas('comments', ['id' => $comment->id]);
+    }
+
+    public function test_super_admin_cannot_delete_a_system_comment(): void
+    {
+        $admin = User::factory()->create();
+        $admin->assignRole('super-admin');
+        $ticket = $this->makeTicket();
+        $comment = $ticket->comments()->create([
+            'user_id' => $admin->id,
+            'content' => 'Evento del sistema',
+            'is_system' => true,
+        ]);
+
+        $this->actingAs($admin)->delete(route('admin.comments.destroy', $comment))->assertForbidden();
+
+        $this->assertDatabaseHas('comments', ['id' => $comment->id]);
+    }
+
     public function test_change_type_updates_ticket_and_adds_system_comment(): void
     {
         $superAdmin = User::factory()->create();

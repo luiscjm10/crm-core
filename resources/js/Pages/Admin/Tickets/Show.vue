@@ -13,6 +13,7 @@ const props = defineProps({
     ticket: Object,
     canClose: Boolean,
     canComment: Boolean,
+    canDeleteComments: Boolean,
     canLogTime: Boolean,
     canViewResolutionTime: Boolean,
     canAssign: Boolean,
@@ -88,6 +89,22 @@ const submitComment = () => {
     form.post(route('admin.comments.store'), {
         preserveScroll: true,
         onSuccess: () => form.reset('content', 'time_spent_minutes'),
+    });
+};
+
+const deleteComment = (comment) => {
+    Swal.fire({
+        title: '¿Eliminar comentario?',
+        text: 'Esta acción también eliminará el tiempo registrado en el comentario.',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: 'Sí, eliminar',
+        cancelButtonText: 'Cancelar',
+        confirmButtonColor: '#dc2626',
+    }).then((result) => {
+        if (result.isConfirmed) {
+            router.delete(route('admin.comments.destroy', comment.id), { preserveScroll: true });
+        }
     });
 };
 
@@ -370,6 +387,13 @@ const formatDate = (date) => {
                                     <span class="text-xs text-zinc-400 dark:text-zinc-500">
                                         {{ formatDate(comment.created_at) }}
                                     </span>
+                                    <button v-if="canDeleteComments" type="button" @click="deleteComment(comment)"
+                                        class="rounded p-1 text-zinc-400 hover:bg-red-50 hover:text-red-600 dark:text-zinc-500 dark:hover:bg-red-950/40 dark:hover:text-red-400 transition-colors"
+                                        aria-label="Eliminar comentario" title="Eliminar comentario">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M6 7h12m-10 0 .6 12h6.8L16 7M10 7V5h4v2m-4 3v6m4-6v6" />
+                                        </svg>
+                                    </button>
                                 </div>
                             </div>
                             <p class="text-sm text-zinc-700 dark:text-zinc-300 whitespace-pre-wrap">{{ comment.content }}</p>
